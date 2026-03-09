@@ -1,0 +1,3827 @@
+<!doctype html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Notas</title>
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet" />
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #0e1117;
+      --surface: #141821;
+      --surface-2: #1a1f2b;
+      --border: #242b38;
+      --text: #ffffff;
+      --muted: #8a95a8;
+      --accent: #2d7ff9;
+      --radius: 10px;
+      --shadow: 0 6px 20px rgba(0, 0, 0, .4);
+      --hbg: #0d0f14ee;
+      --mbg: #161b26;
+      --ctxbg: #1a1f2b;
+      --ibg: #0f1320;
+      --bbg: #1a1f2b;
+      --ch: #2a3446;
+    }
+
+    html.light {
+      --bg: #eef1f6;
+      --surface: #fff;
+      --surface-2: #f2f5f9;
+      --border: #cdd5e0;
+      --text: #111827;
+      --muted: #6b7280;
+      --shadow: 0 4px 14px rgba(0, 0, 0, .1);
+      --hbg: #fffffff0;
+      --mbg: #fff;
+      --ctxbg: #fff;
+      --ibg: #f2f5f9;
+      --bbg: #eef1f6;
+      --ch: #cdd5e0;
+    }
+
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+    }
+
+    body {
+      font-family: Segoe UI, system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      transition: background .25s, color .25s;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: flex;
+      align-items: flex-end;
+      gap: .5rem;
+      padding: .45rem .8rem 0;
+      background: var(--hbg);
+      backdrop-filter: blur(10px) saturate(140%);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tabsbar {
+      display: flex;
+      align-items: flex-end;
+      gap: .2rem;
+      flex: 1;
+      min-width: 0;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .tabsbar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .tab {
+      display: flex;
+      align-items: center;
+      gap: .3rem;
+      padding: .4rem .6rem;
+      border-radius: 6px 6px 0 0;
+      cursor: pointer;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-bottom: none;
+      color: var(--text);
+      white-space: nowrap;
+      font-size: 13px;
+      transition: background .15s;
+      flex-shrink: 0;
+      position: relative;
+      font-weight: 600;
+      margin-bottom: -1px;
+    }
+
+    .tab:hover {
+      background: var(--surface-2);
+    }
+
+    .tab.active {
+      background: var(--hbg);
+      border-color: var(--border);
+      border-bottom-color: var(--hbg);
+      z-index: 2;
+    }
+
+    .tab .label {
+      flex: 1;
+    }
+
+    .tab.drag-over {
+      outline: 2px dashed var(--accent);
+      outline-offset: 2px;
+    }
+
+    .tab-color-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-left: .3rem;
+      flex-shrink: 0;
+    }
+
+    .actions {
+      display: flex;
+      align-items: center;
+      gap: .35rem;
+      margin-left: auto;
+      flex-shrink: 0;
+      padding-bottom: .45rem;
+    }
+
+    .iconbtn {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--ch);
+      border-radius: 8px;
+      background: var(--bbg);
+      color: var(--muted);
+      cursor: pointer;
+      transition: border-color .15s, color .15s;
+      flex-shrink: 0;
+    }
+
+    .iconbtn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .iconbtn.active {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(45,127,249,.12);
+    }
+
+    /* ── Toolbar icon buttons inside table card: borderless, minimal ── */
+    .thead-actions .iconbtn {
+      border: none;
+      background: none;
+      border-radius: 5px;
+      width: 26px;
+      height: 26px;
+      color: var(--muted);
+      transition: background .13s, color .13s;
+    }
+    .thead-actions .iconbtn:hover {
+      border: none;
+      background: var(--ibg);
+      color: var(--text);
+    }
+    .thead-actions .iconbtn.active {
+      border: none;
+      background: rgba(45,127,249,.15);
+      color: var(--accent);
+    }
+
+    /* ── Toolbar search input ── */
+    .tbl-search-inp {
+      width: 0; opacity: 0; padding: 0; pointer-events: none;
+      border: 1px solid var(--border); border-radius: 5px;
+      background: var(--ibg); color: var(--text);
+      font-size: 12px; height: 26px; outline: none;
+      transition: width .2s, opacity .2s, padding .2s;
+      box-sizing: border-box;
+    }
+    .tbl-search-inp::placeholder { color: var(--muted); }
+    .tbl-search-inp:focus { border-color: var(--accent); }
+
+    /* ── Table card light theme (scoped — does NOT affect page bg or nav) ── */
+    .table-card.tbl-light {
+      --surface: #fff;
+      --surface-2: #f2f5f9;
+      --border: #cdd5e0;
+      --text: #111827;
+      --muted: #6b7280;
+      --ibg: #f2f5f9;
+      --bbg: #eef1f6;
+      --ch: #cdd5e0;
+      --accent: #2d7ff9;
+    }
+    .table-card.tbl-light,
+    .table-card.tbl-light .table-card-head,
+    .table-card.tbl-light .tbl-wrap,
+    .table-card.tbl-light .table-footer {
+      background: #fff;
+      color: #111827;
+    }
+    .table-card.tbl-light .table-card-head {
+      background: #f2f5f9;
+    }
+    .table-card.tbl-light .table-footer {
+      background: #f2f5f9;
+    }
+    .table-card.tbl-light .tbl th {
+      background: #f2f5f9;
+      color: #6b7280;
+    }
+    .table-card.tbl-light .tbl td input.cell-input,
+    .table-card.tbl-light .tbl td select.cell-dropdown,
+    .table-card.tbl-light .tbl td input.cell-date-input {
+      color: #111827;
+    }
+    .table-card.tbl-light .tbl .row-num {
+      background: #f2f5f9;
+      color: #6b7280;
+    }
+
+    .iconbtn svg {
+      width: 16px;
+      height: 16px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.8;
+    }
+
+    .iconbtn i {
+      font-size: 16px;
+      line-height: 1;
+    }
+
+    /* ── MAIN ── */
+    main {
+      padding: clamp(.6rem, 1.2vw, 1.1rem);
+      width: 100%;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── EMPTY WORKSPACE ── */
+    .empty-workspace {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 6rem 1rem;
+      gap: 1.5rem;
+      text-align: center;
+      min-height: calc(100vh - 200px);
+    }
+
+    .ew-title {
+      font-size: 23px;
+      font-weight: 700;
+    }
+
+    .ew-sub {
+      font-size: 14px;
+      color: var(--muted);
+      max-width: 360px;
+      line-height: 1.6;
+    }
+
+    /* ── NOTES GRID ── */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+      gap: clamp(.5rem, 1vw, .9rem);
+      align-items: start;
+      align-content: start;
+      flex: 1;
+    }
+
+    .empty-tab {
+      opacity: .55;
+      font-size: 13px;
+      padding: 2rem 0;
+    }
+
+    .notes-page {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .notes-footer {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      padding: .45rem .8rem;
+      background: var(--hbg);
+      backdrop-filter: blur(10px) saturate(140%);
+      border-top: 1px solid var(--border);
+      font-size: 13px;
+      color: var(--muted);
+      flex-shrink: 0;
+      margin: clamp(.6rem, 1.2vw, 1.1rem) calc(-1*clamp(.6rem, 1.2vw, 1.1rem)) calc(-1*clamp(.6rem, 1.2vw, 1.1rem));
+    }
+
+    .notes-footer-count {
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    /* ── NOTE CARD ── */
+    .card {
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: .7rem;
+      display: flex;
+      flex-direction: column;
+      gap: .5rem;
+      box-shadow: var(--shadow);
+      cursor: grab;
+      user-select: none;
+      transition: transform .15s, box-shadow .15s, opacity .15s;
+      position: relative;
+    }
+
+    .card:active {
+      cursor: grabbing;
+    }
+
+    .card.dragging {
+      opacity: .35;
+      transform: scale(.95);
+    }
+
+    .card.drag-over-card {
+      outline: 2px dashed #fff;
+      outline-offset: 3px;
+    }
+
+    /* DEFAULT — usa vars de tema automaticamente */
+    .card[data-color="default"] {
+      background: var(--surface);
+      border-color: var(--border);
+    }
+
+    .card[data-color="default"] h3 {
+      color: var(--text);
+    }
+
+    .card[data-color="default"] .descricao {
+      background: var(--surface-2);
+      border-color: var(--ch);
+      color: var(--text);
+    }
+
+    .card[data-color="default"] .iconbtn {
+      border-color: var(--ch);
+      background: var(--bbg);
+      color: var(--muted);
+    }
+
+    .card[data-color="default"] .iconbtn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* Colored cards — text & icon unificados */
+    .card:not([data-color="default"]) h3 {
+      color: #fff;
+    }
+
+    .card:not([data-color="default"]) .descricao {
+      color: #fff;
+    }
+
+    .card:not([data-color="default"]) .iconbtn {
+      border-color: rgba(255, 255, 255, .3);
+      background: rgba(0, 0, 0, .2);
+      color: rgba(255, 255, 255, .75);
+    }
+
+    .card:not([data-color="default"]) .iconbtn:hover {
+      border-color: #fff;
+      color: #fff;
+    }
+
+    html.light .card:not([data-color="default"]) h3 {
+      color: #fff;
+    }
+
+    html.light .card:not([data-color="default"]) .descricao {
+      color: #fff;
+    }
+
+    /* BLUE */
+    .card[data-color="blue"] {
+      background: #1a3f78;
+      border-color: #2d6be4;
+    }
+
+    .card[data-color="blue"] .descricao {
+      background: #163469;
+      border-color: #2558c0;
+    }
+
+    html.light .card[data-color="blue"] {
+      background: #2563eb;
+      border-color: #1d4ed8;
+    }
+
+    html.light .card[data-color="blue"] .descricao {
+      background: #1d58d8;
+      border-color: #1749c0;
+    }
+
+    /* GREEN */
+    .card[data-color="green"] {
+      background: #0f3d20;
+      border-color: #22a04a;
+    }
+
+    .card[data-color="green"] .descricao {
+      background: #0b3219;
+      border-color: #1a8040;
+    }
+
+    html.light .card[data-color="green"] {
+      background: #16a34a;
+      border-color: #15803d;
+    }
+
+    html.light .card[data-color="green"] .descricao {
+      background: #15913f;
+      border-color: #126e35;
+    }
+
+    /* YELLOW */
+    .card[data-color="yellow"] {
+      background: #4a3800;
+      border-color: #c89600;
+    }
+
+    .card[data-color="yellow"] .descricao {
+      background: #3d2e00;
+      border-color: #a07800;
+    }
+
+    html.light .card[data-color="yellow"] {
+      background: #d97706;
+      border-color: #b45309;
+    }
+
+    html.light .card[data-color="yellow"] .descricao {
+      background: #c46a04;
+      border-color: #9c4a02;
+    }
+
+    /* RED */
+    .card[data-color="red"] {
+      background: #4a0f18;
+      border-color: #e03040;
+    }
+
+    .card[data-color="red"] .descricao {
+      background: #3d0b13;
+      border-color: #c02030;
+    }
+
+    html.light .card[data-color="red"] {
+      background: #dc2626;
+      border-color: #b91c1c;
+    }
+
+    html.light .card[data-color="red"] .descricao {
+      background: #c91e1e;
+      border-color: #a81818;
+    }
+
+    /* PURPLE */
+    .card[data-color="purple"] {
+      background: #2d0f4a;
+      border-color: #9333e8;
+    }
+
+    .card[data-color="purple"] .descricao {
+      background: #240c3d;
+      border-color: #7a28cc;
+    }
+
+    html.light .card[data-color="purple"] {
+      background: #9333ea;
+      border-color: #7e22ce;
+    }
+
+    html.light .card[data-color="purple"] .descricao {
+      background: #8320d6;
+      border-color: #6e1ab8;
+    }
+
+    /* ORANGE */
+    .card[data-color="orange"] {
+      background: #4a2000;
+      border-color: #e06010;
+    }
+
+    .card[data-color="orange"] .descricao {
+      background: #3d1a00;
+      border-color: #c04e0c;
+    }
+
+    html.light .card[data-color="orange"] {
+      background: #ea580c;
+      border-color: #c2440a;
+    }
+
+    html.light .card[data-color="orange"] .descricao {
+      background: #d44e08;
+      border-color: #b83e06;
+    }
+
+    /* PINK */
+    .card[data-color="pink"] {
+      background: #4a0f38;
+      border-color: #e030a0;
+    }
+
+    .card[data-color="pink"] .descricao {
+      background: #3d0b2e;
+      border-color: #c02080;
+    }
+
+    html.light .card[data-color="pink"] {
+      background: #db2777;
+      border-color: #be185d;
+    }
+
+    html.light .card[data-color="pink"] .descricao {
+      background: #c82068;
+      border-color: #a81458;
+    }
+
+    /* TEAL */
+    .card[data-color="teal"] {
+      background: #0f3840;
+      border-color: #0d9488;
+    }
+
+    .card[data-color="teal"] .descricao {
+      background: #0b2e35;
+      border-color: #0a7870;
+    }
+
+    html.light .card[data-color="teal"] {
+      background: #0d9488;
+      border-color: #0f766e;
+    }
+
+    html.light .card[data-color="teal"] .descricao {
+      background: #0b8278;
+      border-color: #096e64;
+    }
+
+    .card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: .35rem;
+    }
+
+    .titlewrap {
+      display: flex;
+      align-items: center;
+      gap: .4rem;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .card h3 {
+      margin: 0;
+      font-size: 13.5px;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .descricao {
+      white-space: pre-wrap;
+      border-radius: 7px;
+      padding: .6rem;
+      font-size: 13px;
+      border: 1px solid var(--ch);
+      line-height: 1.5;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+    }
+
+
+    /* ── TRASH BUTTON / LIXEIRA ── */
+    .iconbtn.trash-btn { position: relative; }
+    .trash-badge {
+      position: absolute; top: -4px; right: -4px;
+      background: #ef4444; color: #fff;
+      font-size: 9px; font-weight: 700;
+      min-width: 14px; height: 14px; border-radius: 7px;
+      display: flex; align-items: center; justify-content: center;
+      padding: 0 3px; pointer-events: none; line-height: 1;
+    }
+    /* ── CUT CELLS (dashed border like Excel) ── */
+    .tbl td.cell-cut {
+      outline: 2px dashed #f59e0b !important;
+      outline-offset: -2px;
+      background: rgba(245,158,11,.08) !important;
+    }
+
+    /* ── TABLE CARD ── */
+    .table-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      background: var(--surface);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .table-card[data-tcolor]:not([data-tcolor="default"]) {
+      border-top-width: 3px;
+    }
+
+    .table-card[data-tcolor="blue"] {
+      border-top-color: #2d7ff9;
+    }
+
+    .table-card[data-tcolor="green"] {
+      border-top-color: #16a34a;
+    }
+
+    .table-card[data-tcolor="yellow"] {
+      border-top-color: #f59e0b;
+    }
+
+    .table-card[data-tcolor="red"] {
+      border-top-color: #dc2626;
+    }
+
+    .table-card[data-tcolor="purple"] {
+      border-top-color: #9333ea;
+    }
+
+    .table-card[data-tcolor="orange"] {
+      border-top-color: #ea580c;
+    }
+
+    .table-card[data-tcolor="pink"] {
+      border-top-color: #db2777;
+    }
+
+    .table-card[data-tcolor="teal"] {
+      border-top-color: #0d9488;
+    }
+
+    .table-card-head {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      padding: .55rem .75rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface-2);
+      flex-wrap: wrap;
+    }
+
+    .table-card-head h3 {
+      margin: 0;
+      font-size: 13.5px;
+      font-weight: 700;
+      flex: 1;
+      min-width: 0;
+      cursor: pointer;
+    }
+
+    .table-card-head h3:hover {
+      opacity: .8;
+    }
+
+    .thead-actions {
+      display: flex;
+      align-items: center;
+      gap: .25rem;
+      flex: 1;
+      flex-wrap: nowrap;
+      overflow: hidden;
+    }
+
+    .tbl-wrap {
+      overflow-x: auto;
+      position: relative;
+    }
+
+    .tbl-wrap::-webkit-scrollbar {
+      height: 6px;
+      width: 6px;
+    }
+
+    .tbl-wrap::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .tbl-wrap::-webkit-scrollbar-thumb {
+      background: rgba(150, 150, 150, 0.3);
+      border-radius: 3px;
+    }
+
+    .tbl-wrap::-webkit-scrollbar-thumb:hover {
+      background: rgba(150, 150, 150, 0.5);
+    }
+
+    .tbl {
+      width: max-content;
+      border-collapse: collapse;
+      font-size: 13px;
+      table-layout: fixed;
+    }
+
+    .tbl th,
+    .tbl td {
+      border: 1px solid var(--border);
+      padding: 0;
+      position: relative;
+    }
+
+    .tbl th {
+      background: var(--surface-2);
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 12px;
+      min-width: 110px;
+      user-select: none;
+    }
+
+    .tbl th .resizer {
+      position: absolute;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      width: 5px;
+      cursor: col-resize;
+      user-select: none;
+      z-index: 10;
+    }
+
+    .tbl th .resizer:hover,
+    .tbl th .resizer.resizing {
+      background: var(--accent);
+    }
+
+    .tbl th .th-inner {
+      display: flex;
+      align-items: center;
+      padding: .4rem .55rem;
+      gap: .3rem;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    /* Column drag handle strip — sits on top of TH, mirrors rnum-drag on rows */
+    .tbl th {
+      position: relative;
+    }
+    .tbl th .th-drag {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 8px;
+      cursor: grab;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: transparent;
+      font-size: 8px;
+      letter-spacing: -1px;
+      border-bottom: 1px solid transparent;
+      transition: color .15s, background .15s, border-color .15s;
+      z-index: 2;
+    }
+    .tbl th:hover .th-drag {
+      color: var(--muted);
+      background: rgba(45,127,249,.07);
+      border-bottom-color: var(--border);
+    }
+    .tbl th .th-drag:active { cursor: grabbing; }
+    .tbl th.col-selected .th-drag {
+      color: var(--accent);
+      background: rgba(45,127,249,.18);
+      border-bottom-color: rgba(45,127,249,.4);
+    }
+
+    .tbl th .th-lbl {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .sort-icon {
+      display: none;
+    }
+
+    /* th-edit removed — columns are not editable */
+
+    .tbl td input.cell-input {
+      width: 100%;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text);
+      font-size: 13px;
+      padding: .38rem .55rem;
+      display: block;
+    }
+
+    .tbl td input.cell-input:focus {
+      background: rgba(45, 127, 249, .07);
+    }
+
+    .add-row-th {
+      display: none;
+    }
+
+    .tbl .add-col-th {
+      display: none;
+    }
+
+    .tbl .row-num,
+    .tbl .row-num-th {
+      width: 48px;
+      min-width: 48px;
+      max-width: 48px;
+      text-align: right;
+      background: var(--surface-2);
+    }
+
+    .tbl .row-num {
+      color: var(--muted);
+      font-size: 11px;
+      user-select: none;
+      padding: 0;
+      cursor: pointer;
+      position: relative;
+    }
+
+    /* Left drag-handle strip — grab cursor */
+    .tbl .row-num .rnum-drag {
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 14px;
+      cursor: grab;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: transparent;
+      font-size: 10px;
+      border-right: 1px solid var(--border);
+      transition: color .15s, background .15s;
+      border-radius: 3px 0 0 3px;
+    }
+    .tbl .row-num:hover .rnum-drag {
+      color: var(--muted);
+      background: rgba(45,127,249,.07);
+    }
+    .tbl .row-num .rnum-drag:active { cursor: grabbing; }
+
+    /* Number zone — click to select row */
+    .tbl .row-num .rnum-num {
+      display: block;
+      padding: 0 5px 0 18px;
+      line-height: 1;
+    }
+
+    .tbl .row-num:hover .rnum-num {
+      color: var(--accent);
+    }
+    .tbl tr.row-selected .row-num .rnum-drag {
+      color: var(--accent);
+      background: rgba(45,127,249,.18);
+    }
+
+    .tbl tr:hover td:not(.row-num) {
+      background: rgba(45, 127, 249, .05);
+    }
+
+    .row-resizer {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 5px;
+      cursor: row-resize;
+      user-select: none;
+      z-index: 10;
+    }
+
+    .row-resizer:hover,
+    .row-resizer.resizing {
+      background: var(--accent);
+    }
+
+    .tbl.all-selected td,
+    .tbl.all-selected th {
+      background-color: rgba(45, 127, 249, 0.08) !important;
+    }
+
+    .select-all-btn {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--muted);
+      font-size: 10px;
+    }
+
+    .select-all-btn:hover {
+      background: rgba(45, 127, 249, 0.1);
+    }
+
+    /* ── CELL SELECTION ── */
+    .tbl td.cell-selected {
+      background: rgba(45, 127, 249, 0.18) !important;
+      outline: 1px solid rgba(45, 127, 249, 0.6);
+      outline-offset: -1px;
+    }
+    .tbl td.cell-anchor {
+      outline: 2px solid var(--accent) !important;
+      outline-offset: -2px;
+    }
+    /* ── FILL HANDLE: small square at bottom-right of anchor cell ── */
+    .tbl td.cell-anchor .fill-handle {
+      position: absolute;
+      right: -4px; bottom: -4px;
+      width: 8px; height: 8px;
+      background: var(--accent);
+      border: 1.5px solid var(--surface);
+      border-radius: 1px;
+      cursor: crosshair;
+      z-index: 20;
+    }
+    /* ── FILL PREVIEW: highlight during fill drag ── */
+    .tbl td.fill-preview {
+      background: rgba(45,127,249,.15) !important;
+      outline: 1px dashed var(--accent) !important;
+      outline-offset: -1px;
+    }
+    /* Ensure anchor TD has position:relative for the handle */
+    .tbl td { position: relative; }
+    .tbl tr.row-selected td:not(.row-num) {
+      background: rgba(45, 127, 249, 0.13) !important;
+    }
+    .tbl tr.row-selected .row-num {
+      background: rgba(45, 127, 249, 0.25) !important;
+      color: var(--accent) !important;
+    }
+
+    /* ── DROPDOWN CELL ── */
+    .cell-dropdown {
+      width: 100%;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text);
+      font-size: 13px;
+      padding: .38rem .55rem;
+      display: block;
+      cursor: pointer;
+    }
+    .cell-dropdown:focus { background: rgba(45,127,249,.07); }
+    .dropdown-badge {
+      display: inline-block;
+      padding: 1px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #fff;
+      pointer-events: none;
+    }
+    .cell-date-input {
+      width: 100%;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text);
+      font-size: 13px;
+      padding: .38rem .55rem;
+      display: block;
+    }
+    .cell-date-input:focus { background: rgba(45,127,249,.07); }
+    /* Configurar coluna button in header */
+    .btn-cfg-col {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 11px;
+      padding: 0 2px;
+      line-height: 1;
+    }
+    .btn-cfg-col:hover { color: var(--accent); }
+
+    .tbl tr.row-pinned {
+      background: var(--ibg);
+      border-bottom: 2px solid var(--accent);
+    }
+
+    .tbl th.col-drag-over {
+      outline: 2px solid var(--accent);
+      outline-offset: -2px;
+    }
+
+    .table-footer {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      padding: .38rem .75rem;
+      border-top: 1px solid var(--border);
+      background: var(--surface-2);
+    }
+
+    .table-footer-info {
+      font-size: 11px;
+      color: var(--muted);
+      margin-left: auto;
+    }
+
+    .filter-input {
+      height: 26px;
+      padding: 0 .5rem;
+      border: 1px solid var(--ch);
+      border-radius: 6px;
+      background: var(--ibg);
+      color: var(--text);
+      font-size: 12px;
+      width: 130px;
+    }
+
+    .filter-input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .tables-nav {
+      display: flex;
+      gap: .3rem;
+      flex-wrap: wrap;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0;
+      margin-bottom: .75rem;
+    }
+
+    .table-nav-btn {
+      padding: .4rem .65rem;
+      border-radius: 6px 6px 0 0;
+      border: 1px solid var(--border);
+      border-bottom: none;
+      background: transparent;
+      color: var(--text);
+      cursor: pointer;
+      font-size: 12px;
+      transition: border-color .15s, background .15s, border-top-color .15s;
+      position: relative;
+      font-weight: 600;
+      margin-bottom: -1px;
+    }
+
+    .table-nav-btn.active {
+      border-color: var(--border);
+      background: var(--surface);
+      border-bottom-color: var(--surface);
+      z-index: 2;
+    }
+
+    .table-nav-btn:hover {
+      border-color: var(--accent);
+    }
+
+    .table-nav-btn[data-color="blue"] {
+      border-top-color: #2d7ff9;
+      border-top-width: 3px;
+      padding-top: .25rem;
+    }
+
+    .table-nav-btn[data-color="green"] {
+      border-top-color: #16a34a;
+      border-top-width: 3px;
+      padding-top: .25rem;
+    }
+
+    .table-nav-btn[data-color="yellow"] {
+      border-top-color: #f59e0b;
+      border-top-width: 3px;
+      padding-top: .25rem;
+    }
+
+    .table-nav-btn[data-color="red"] {
+      border-top-color: #dc2626;
+      border-top-width: 3px;
+      padding-top: .25rem;
+    }
+
+    .table-nav-btn[data-color="purple"] {
+      border-top-color: #9333ea;
+      border-top-width: 3px;
+      padding-top: .25rem;
+    }
+
+    .table-nav-btn[data-color="orange"] {
+      border-top-color: #ea580c;
+      border-top-width: 3px;
+      padding-top: .25rem;
+    }
+
+    .table-nav-btn[data-color="pink"] {
+      border-top-color: #db2777;
+      border-top-width: 3px;
+      padding-top: .25rem;
+    }
+
+    .table-nav-btn[data-color="teal"] {
+      border-top-color: #0d9488;
+      border-top-width: 3px;
+      padding-top: .25rem;
+    }
+
+    /* ── CONTEXT MENU ── */
+    .contextmenu {
+      position: fixed;
+      min-width: 195px;
+      background: var(--ctxbg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: .25rem;
+      box-shadow: 0 14px 40px rgba(0, 0, 0, .55);
+      display: none;
+      z-index: 10020;
+    }
+
+    .contextmenu.show {
+      display: block;
+    }
+
+    .contextmenu button {
+      width: 100%;
+      text-align: left;
+      background: transparent;
+      border: none;
+      color: var(--text);
+      padding: .46rem .65rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .contextmenu button:hover {
+      background: var(--surface-2);
+    }
+
+    .contextmenu .danger {
+      color: #ef4444;
+    }
+
+    .contextmenu .danger:hover {
+      background: #2a1018;
+      color: #ff8090;
+    }
+
+    .ctx-sep {
+      height: 1px;
+      background: var(--border);
+      margin: .2rem 0;
+    }
+
+    .ctx-lbl {
+      font-size: 11px;
+      color: var(--muted);
+      padding: .28rem .65rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    .color-row {
+      display: flex;
+      gap: .3rem;
+      padding: .38rem .55rem;
+      flex-wrap: wrap;
+    }
+
+    .csw {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: transform .15s, box-shadow .15s;
+      flex-shrink: 0;
+    }
+
+    .csw:hover {
+      transform: scale(1.25);
+    }
+
+    .csw.active {
+      border-color: #fff;
+      box-shadow: 0 0 0 2px var(--accent);
+    }
+
+    .csw[data-c="default"] {
+      background: #4a5568;
+    }
+
+    .csw[data-c="blue"] {
+      background: #2563eb;
+    }
+
+    .csw[data-c="green"] {
+      background: #16a34a;
+    }
+
+    .csw[data-c="yellow"] {
+      background: #d97706;
+    }
+
+    .csw[data-c="red"] {
+      background: #dc2626;
+    }
+
+    .csw[data-c="purple"] {
+      background: #9333ea;
+    }
+
+    .csw[data-c="orange"] {
+      background: #ea580c;
+    }
+
+    .csw[data-c="pink"] {
+      background: #db2777;
+    }
+
+    .csw[data-c="teal"] {
+      background: #0d9488;
+    }
+
+    /* ── MODAL ── */
+    .backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9990;
+      backdrop-filter: blur(4px);
+    }
+
+    .backdrop.show {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--mbg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      width: clamp(460px, 88vw, 800px);
+      max-height: 90vh;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, .55);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .modal header {
+      display: flex;
+      align-items: center;
+      padding: .8rem 1rem;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .modal header h2 {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 700;
+      flex: 1;
+    }
+
+    .modal .body {
+      padding: 1rem;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255, 255, 255, .1) transparent;
+    }
+
+    .modal .body::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .modal .body::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .modal .body::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, .1);
+      border-radius: 2px;
+    }
+
+    .modal .footer {
+      display: flex;
+      gap: .45rem;
+      padding: .75rem 1rem;
+      border-top: 1px solid var(--border);
+      justify-content: flex-end;
+      flex-shrink: 0;
+    }
+
+    .btn {
+      height: 33px;
+      padding: 0 .9rem;
+      border: 1px solid var(--ch);
+      border-radius: 8px;
+      background: var(--bbg);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 13px;
+      transition: border-color .15s;
+    }
+
+    .btn:hover {
+      border-color: var(--accent);
+    }
+
+    .btn.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .btn.primary:hover {
+      filter: brightness(1.12);
+    }
+
+    .btn.danger {
+      border-color: #7a2b33;
+      color: #ef4444;
+      background: transparent;
+    }
+
+    .btn.danger:hover {
+      border-color: #b23c49;
+      background: #2a1018;
+    }
+
+    .input,
+    .textarea {
+      width: 100%;
+      padding: .68rem .9rem;
+      border: 1px solid var(--ch);
+      border-radius: 8px;
+      background: var(--ibg);
+      color: var(--text);
+      font-size: 14px;
+    }
+
+    .input:focus,
+    .textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .textarea {
+      min-height: 110px;
+      resize: vertical;
+      font-family: inherit;
+      line-height: 1.55;
+    }
+
+    .textarea.big {
+      min-height: 320px;
+    }
+
+    .spacer {
+      height: .7rem;
+    }
+
+    .color-picker-row {
+      display: flex;
+      gap: .45rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .color-picker-row label {
+      font-size: 12px;
+      color: var(--muted);
+      margin-right: .1rem;
+    }
+
+    .msw {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: transform .15s, box-shadow .15s;
+    }
+
+    .msw:hover {
+      transform: scale(1.2);
+    }
+
+    .msw.active {
+      border-color: #fff;
+      box-shadow: 0 0 0 2.5px var(--accent);
+    }
+
+    .msw[data-c="default"] {
+      background: #4a5568;
+    }
+
+    .msw[data-c="blue"] {
+      background: #2563eb;
+    }
+
+    .msw[data-c="green"] {
+      background: #16a34a;
+    }
+
+    .msw[data-c="yellow"] {
+      background: #d97706;
+    }
+
+    .msw[data-c="red"] {
+      background: #dc2626;
+    }
+
+    .msw[data-c="purple"] {
+      background: #9333ea;
+    }
+
+    .msw[data-c="orange"] {
+      background: #ea580c;
+    }
+
+    .msw[data-c="pink"] {
+      background: #db2777;
+    }
+
+    .msw[data-c="teal"] {
+      background: #0d9488;
+    }
+
+    .type-chooser {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .type-opt {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: .5rem;
+      padding: 1.1rem 1.3rem;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      background: var(--surface-2);
+      transition: border-color .15s, background .15s;
+      flex: 1;
+      min-width: 130px;
+    }
+
+    .type-opt:hover,
+    .type-opt.selected {
+      border-color: var(--accent);
+      background: var(--ibg);
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--ctxbg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: .48rem .85rem;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, .5);
+      z-index: 10030;
+      display: none;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .toast.show {
+      display: block;
+      animation: fadeUp .2s ease;
+    }
+
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translate(-50%, 8px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translate(-50%, 0);
+      }
+    }
+
+
+
+    /* ── SORT & FILTER POPUP ── */
+    .sf-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .sf-popup {
+      display: none;
+      position: fixed;
+      z-index: 9999;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px;
+      box-shadow: 0 6px 24px rgba(0,0,0,.35);
+      width: 230px;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .sf-popup.open { display: flex; }
+    .sf-section-lbl {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      margin-bottom: 2px;
+    }
+    .sf-row {
+      display: flex;
+      gap: 5px;
+      align-items: center;
+    }
+    .sf-select {
+      flex: 1;
+      background: var(--ibg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 12px;
+      padding: 4px 7px;
+      outline: none;
+    }
+    .sf-select:focus { border-color: var(--accent); }
+    .sf-sort-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px; height: 28px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--ibg);
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 12px;
+      flex-shrink: 0;
+      transition: border-color .13s, color .13s, background .13s;
+    }
+    .sf-sort-btn:hover, .sf-sort-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(45,127,249,.1); }
+    .sf-divider { height: 1px; background: var(--border); margin: 2px 0; }
+    .sf-filter-inp {
+      width: 100%;
+      background: var(--ibg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 12px;
+      padding: 5px 8px;
+      outline: none;
+      box-sizing: border-box;
+    }
+    .sf-filter-inp:focus { border-color: var(--accent); }
+    .sf-clear-btn {
+      width: 100%;
+      padding: 5px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: none;
+      color: var(--muted);
+      font-size: 11px;
+      cursor: pointer;
+      transition: color .13s, border-color .13s;
+    }
+    .sf-clear-btn:hover { color: #ef4444; border-color: rgba(239,68,68,.4); }
+
+    /* ── CELL FORMAT TOOLBAR ── */
+    .fmt-bar {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      margin-left: 4px;
+    }
+    .fmt-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px;
+      height: 26px;
+      border: 1px solid transparent;
+      border-radius: 5px;
+      background: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 700;
+      transition: background .13s, color .13s, border-color .13s;
+      flex-shrink: 0;
+    }
+    .fmt-btn:hover {
+      background: var(--ibg);
+      border-color: var(--border);
+      color: var(--text);
+    }
+    .fmt-btn.active {
+      background: rgba(45,127,249,.18);
+      border-color: rgba(45,127,249,.4);
+      color: var(--accent);
+    }
+    .fmt-sep {
+      width: 1px;
+      height: 16px;
+      background: var(--border);
+      margin: 0 2px;
+      flex-shrink: 0;
+    }
+    /* Color swatch picker inline */
+    .fmt-color-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .fmt-color-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px;
+      height: 26px;
+      border: 1px solid transparent;
+      border-radius: 5px;
+      background: none;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--muted);
+      transition: background .13s, border-color .13s;
+      flex-shrink: 0;
+      flex-direction: column;
+      gap: 1px;
+    }
+    .fmt-color-btn:hover { background: var(--ibg); border-color: var(--border); }
+    .fmt-color-btn .color-bar {
+      width: 14px;
+      height: 3px;
+      border-radius: 2px;
+      background: currentColor;
+      pointer-events: none;
+    }
+    .fmt-color-popup {
+      display: none;
+      position: fixed;
+      z-index: 9999;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px;
+      box-shadow: 0 4px 20px rgba(0,0,0,.35);
+      flex-wrap: wrap;
+      gap: 4px;
+      width: 224px;
+    }
+    .fmt-color-popup.open { display: flex; }
+    .fmt-color-popup.tbl-light {
+      background: #fff;
+      border-color: #cdd5e0;
+      box-shadow: 0 4px 20px rgba(0,0,0,.15);
+    }
+    .fmt-color-swatch {
+      width: 20px; height: 20px;
+      border-radius: 4px;
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: transform .1s, border-color .1s;
+    }
+    .fmt-color-swatch:hover { transform: scale(1.15); }
+    .fmt-color-swatch.active { border-color: var(--accent); }
+
+    /* Column selection highlight */
+    th.col-selected { background: rgba(45,127,249,.18) !important; }
+  </style>
+</head>
+
+<body>
+  <div class="header" id="header">
+    <div class="tabsbar" id="tabsbar"></div>
+    <div class="actions">
+      <button class="iconbtn" id="btnNewTab" title="Nova aba">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 5v14" />
+          <path d="M5 12h14" />
+        </svg>
+      </button>
+      <button class="iconbtn trash-btn" id="btnLixeira" title="Lixeira de notas">
+        <i class="bx bx-trash" style="font-size:16px"></i>
+        <span class="trash-badge" id="trashBadge" style="display:none"></span>
+      </button>
+      <button class="iconbtn" id="btnConfig" title="Configurações">
+        <i class="bx bx-cog" style="font-size:16px"></i>
+      </button>
+    </div>
+  </div>
+  <main id="main"></main>
+  <div class="contextmenu" id="ctx" aria-hidden="true"></div>
+  <div class="backdrop" id="backdrop" aria-hidden="true"></div>
+  <div class="toast" id="toast"></div>
+  <script>
+    let state = { abas: [], abaAtiva: null, config: {}, lixeira: [] };
+
+    /* ── UNDO / REDO ── */
+    const _undo = [], _redo = [];
+    function snapshot() {
+      _undo.push(JSON.stringify(state));
+      if (_undo.length > 60) _undo.shift();
+      _redo.length = 0;
+    }
+    function undo() {
+      if (!_undo.length) { showToast('Nada para desfazer'); return; }
+      _redo.push(JSON.stringify(state));
+      state = JSON.parse(_undo.pop());
+      render(); salvar(); showToast('↩ Desfeito');
+    }
+    function redo() {
+      if (!_redo.length) { showToast('Nada para refazer'); return; }
+      _undo.push(JSON.stringify(state));
+      state = JSON.parse(_redo.pop());
+      render(); salvar(); showToast('↪ Refeito');
+    }
+    const el = s => document.querySelector(s);
+    const uid = () => Math.random().toString(36).slice(2, 9);
+    const COLORS = ['default', 'blue', 'green', 'yellow', 'red', 'purple', 'orange', 'pink', 'teal'];
+    const CNAMES = { default: 'Padrão', blue: 'Azul', green: 'Verde', yellow: 'Amarelo', red: 'Vermelho', purple: 'Roxo', orange: 'Laranja', pink: 'Rosa', teal: 'Teal' };
+    const CDOTS = { default: '#4a5568', blue: '#2563eb', green: '#16a34a', yellow: '#d97706', red: '#dc2626', purple: '#9333ea', orange: '#ea580c', pink: '#db2777', teal: '#0d9488' };
+
+    function getColName(i) { const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'; let name = ''; i++; while (i > 0) { i--; name = letters[i % 26] + name; i = Math.floor(i / 26); } return name; }
+    function showToast(msg) { const t = el('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 2200); }
+    window.addEventListener('error', e => console.error(e));
+
+    /* THEME */
+    (function () {
+      const saved = localStorage.getItem('notas-theme') || 'dark';
+      if (saved === 'light') document.documentElement.classList.add('light');
+    })();
+    function toggleTheme() {
+      const l = !document.documentElement.classList.contains('light');
+      document.documentElement.classList.toggle('light', l);
+      localStorage.setItem('notas-theme', l ? 'light' : 'dark');
+    }
+
+    /* PERSIST */
+    function salvar() { try { localStorage.setItem('notas-app', JSON.stringify(state)); } catch (e) { } }
+    (function () {
+      try { const raw = localStorage.getItem('notas-app'); if (raw) { const d = JSON.parse(raw); if (d && Array.isArray(d.abas)) { state = d; if (!state.config) state.config = {}; if (!state.lixeira) state.lixeira = {}; if (!Array.isArray(state.lixeira)) state.lixeira = []; if (!state.abaAtiva && state.abas.length) state.abaAtiva = state.abas[0].id; return; } } } catch (e) { }
+      state = { abas: [], abaAtiva: null, config: {} };
+    })();
+    function getAba(id) { return state.abas.find(a => a.id === id); }
+    function getAbaAtiva() { return getAba(state.abaAtiva); }
+
+    /* MODAL */
+    function openModal(title, bodyNode, footerNodes = []) {
+      const bd = el('#backdrop'); bd.innerHTML = '';
+      const m = document.createElement('div'); m.className = 'modal';
+      const h = document.createElement('header'); const ht = document.createElement('h2'); ht.textContent = title; h.appendChild(ht);
+      const b = document.createElement('div'); b.className = 'body'; b.appendChild(bodyNode);
+      const f = document.createElement('div'); f.className = 'footer'; footerNodes.forEach(n => f.appendChild(n));
+      m.appendChild(h); m.appendChild(b); m.appendChild(f);
+      bd.appendChild(m); bd.classList.add('show'); bd.setAttribute('aria-hidden', 'false');
+      bd.onclick = e => { if (e.target === bd) closeModal(); };
+      setTimeout(() => { const x = m.querySelector('input,textarea'); if (x) x.focus(); }, 60);
+    }
+    function closeModal() { const bd = el('#backdrop'); bd.classList.remove('show'); bd.setAttribute('aria-hidden', 'true'); bd.innerHTML = ''; }
+
+    /* CTX MENU */
+    const ctx = el('#ctx');
+    function openCtx(x, y, items) {
+      ctx.innerHTML = '';
+      items.forEach(it => {
+        if (it.type === 'sep') { const s = document.createElement('div'); s.className = 'ctx-sep'; ctx.appendChild(s); return; }
+        if (it.type === 'lbl') { const l = document.createElement('div'); l.className = 'ctx-lbl'; l.textContent = it.text; ctx.appendChild(l); return; }
+        if (it.type === 'colors') {
+          const row = document.createElement('div'); row.className = 'color-row';
+          COLORS.forEach(c => { const sw = document.createElement('div'); sw.className = 'csw' + (it.cur === c ? ' active' : ''); sw.dataset.c = c; sw.title = CNAMES[c]; sw.onclick = ev => { ev.stopPropagation(); it.fn(c); closeCtx(); }; row.appendChild(sw); });
+          ctx.appendChild(row); return;
+        }
+        const b = document.createElement('button'); b.textContent = it.label; if (it.danger) b.classList.add('danger');
+        b.onclick = ev => { ev.stopPropagation(); it.fn(); closeCtx(); }; ctx.appendChild(b);
+      });
+      ctx.style.left = Math.min(Math.max(8, x), window.innerWidth - 212) + 'px';
+      ctx.style.top = Math.min(Math.max(8, y), window.innerHeight - 260) + 'px';
+      ctx.classList.add('show'); ctx.setAttribute('aria-hidden', 'false');
+    }
+    function closeCtx() { ctx.classList.remove('show'); ctx.setAttribute('aria-hidden', 'true'); }
+    window.addEventListener('click', e => { if (ctx.classList.contains('show') && !ctx.contains(e.target)) closeCtx(); });
+    window.addEventListener('keydown', e => { if (e.key === 'Escape') { closeCtx(); closeModal(); } });
+
+    /* TABS */
+    function criarAba(tipo = 'notas', nome = 'Nova aba') {
+      const isLight = document.documentElement.classList.contains('light');
+      const corPadrao = isLight ? 'default' : 'default';
+      const aba = {
+        id: uid(), nome, tipo, cor: 'default', notas: [], tabelas: [
+          { id: uid(), nome: 'Tabela 1', isDefault: true, colunas: Array.from({ length: 26 }).map(() => ({ id: uid(), nome: '' })), linhas: Array.from({ length: 26 }).map(() => Array(26).fill('')), cor: 'default', sort: { col: null, dir: 'asc' }, filter: '', linhasColoridas: {}, linhasFixas: [], colWidths: {} }
+        ], tabelaAtivaId: null
+      };
+      if (tipo === 'tabela') aba.tabelaAtivaId = aba.tabelas[0].id;
+      state.abas.push(aba); state.abaAtiva = aba.id; render(); salvar();
+    }
+    function excluirAba(id) { state.abas = state.abas.filter(a => a.id !== id); if (state.abaAtiva === id) state.abaAtiva = state.abas.length ? state.abas[0].id : null; render(); salvar(); showToast('Aba excluída'); }
+    function setAba(id) { state.abaAtiva = id; render(); salvar(); }
+
+    function renderTabs() {
+      const bar = el('#tabsbar');
+      bar.innerHTML = '';
+
+      state.abas.forEach((aba, idx) => {
+        const t = document.createElement('button');
+        t.className = 'tab' + (aba.id === state.abaAtiva ? ' active' : '');
+        t.onclick = () => setAba(aba.id);
+        t.draggable = true;
+
+        t.addEventListener('dragstart', ev => {
+          ev.dataTransfer.setData('text/plain', 'tab:' + idx);
+          ev.dataTransfer.effectAllowed = 'move';
+        });
+        t.addEventListener('dragover', ev => { ev.preventDefault(); t.classList.add('drag-over'); });
+        t.addEventListener('dragleave', () => t.classList.remove('drag-over'));
+        t.addEventListener('drop', ev => {
+          ev.preventDefault();
+          t.classList.remove('drag-over');
+          const raw = ev.dataTransfer.getData('text/plain');
+          if (raw.startsWith('tab:')) {
+            const from = parseInt(raw.replace('tab:', ''));
+            const arr = state.abas.slice();
+            const [item] = arr.splice(from, 1);
+            arr.splice(idx, 0, item);
+            state.abas = arr;
+            render();
+            salvar();
+          }
+        });
+
+        const lbl = document.createElement('span');
+        lbl.className = 'label';
+        lbl.textContent = aba.nome;
+        lbl.ondblclick = ev => {
+          ev.stopPropagation();
+          abrirModalRenomearAba(aba.id);
+        };
+
+        const dot = document.createElement('div');
+        dot.className = 'tab-color-dot';
+        dot.style.background = CDOTS[aba.cor || 'default'];
+
+        t.appendChild(lbl);
+        t.appendChild(dot);
+        t.addEventListener('contextmenu', ev => {
+          ev.preventDefault();
+          openCtx(ev.clientX, ev.clientY, [
+            { label: 'Renomear', fn: () => abrirModalRenomearAba(aba.id) },
+            { type: 'sep' },
+            { label: 'Excluir', danger: true, fn: () => excluirAba(aba.id) },
+            { type: 'sep' }, { type: 'lbl', text: 'Cor da aba' },
+            { type: 'colors', cur: aba.cor || 'default', fn: (c) => { aba.cor = c; render(); salvar(); } }
+          ]);
+        });
+        bar.appendChild(t);
+      });
+    }
+
+    function abrirModalRenomearAba(id) {
+      const aba = getAba(id); if (!aba) return;
+      const body = document.createElement('div');
+      const inp = document.createElement('input'); inp.className = 'input'; inp.placeholder = 'Nome da aba'; inp.value = aba.nome;
+      inp.addEventListener('keydown', e => { if (e.key === ' ') e.stopPropagation(); if (e.key === 'Enter') { e.preventDefault(); ok.click(); } });
+      body.appendChild(inp);
+      const ok = document.createElement('button'); ok.className = 'btn primary'; ok.textContent = 'Renomear';
+      ok.onclick = () => { const v = inp.value.trim(); if (v) { aba.nome = v; render(); salvar(); closeModal(); showToast('Aba renomeada'); } };
+      const cancel = document.createElement('button'); cancel.className = 'btn'; cancel.textContent = 'Cancelar'; cancel.onclick = closeModal;
+      openModal('Renomear aba', body, [cancel, ok]);
+    }
+
+    /* NOVA ABA MODAL */
+    function abrirModalNovaAba() {
+      let tipoSel = 'notas';
+      const body = document.createElement('div');
+      const chooser = document.createElement('div'); chooser.className = 'type-chooser';
+      [{ tipo: 'notas', label: '+ Notas', desc: 'Blocos de texto livres' }, { tipo: 'tabela', label: '+ Tabela', desc: 'Linhas e colunas estilo planilha' }].forEach(opt => {
+        const d = document.createElement('div'); d.className = 'type-opt' + (opt.tipo === tipoSel ? ' selected' : '');
+        d.innerHTML = `<span>${opt.label}</span><small style="color:var(--muted);font-weight:400">${opt.desc}</small>`;
+        d.onclick = () => { tipoSel = opt.tipo; chooser.querySelectorAll('.type-opt').forEach(x => x.classList.remove('selected')); d.classList.add('selected'); };
+        chooser.appendChild(d);
+      });
+      const sp = document.createElement('div'); sp.className = 'spacer';
+      const inp = document.createElement('input'); inp.className = 'input'; inp.placeholder = 'Nome da aba';
+      inp.addEventListener('keydown', e => { if (e.key === ' ') e.stopPropagation(); if (e.key === 'Enter') { e.preventDefault(); ok.click(); } });
+      body.appendChild(chooser); body.appendChild(sp); body.appendChild(inp);
+      const ok = document.createElement('button'); ok.className = 'btn primary'; ok.textContent = 'Criar';
+      ok.onclick = () => { const n = (inp.value || '').trim() || 'Nova aba'; criarAba(tipoSel, n); closeModal(); };
+      const cancel = document.createElement('button'); cancel.className = 'btn'; cancel.textContent = 'Cancelar'; cancel.onclick = closeModal;
+      openModal('Nova aba', body, [cancel, ok]);
+    }
+
+    /* COLOR PICKER HELPER */
+    function makeColorPicker(cur, onChange) {
+      const row = document.createElement('div'); row.className = 'color-picker-row';
+      const lbl = document.createElement('label'); lbl.textContent = 'Cor:'; row.appendChild(lbl);
+      COLORS.forEach(c => {
+        const sw = document.createElement('div'); sw.className = 'msw' + (c === cur ? ' active' : ''); sw.dataset.c = c; sw.title = CNAMES[c];
+        sw.onclick = () => { row.querySelectorAll('.msw').forEach(x => x.classList.remove('active')); sw.classList.add('active'); onChange(c); };
+        row.appendChild(sw);
+      });
+      return row;
+    }
+
+    function lockSpace(inp) { inp.addEventListener('keydown', e => { if (e.key === ' ') e.stopPropagation(); }); }
+
+    /* NOTES */
+    function addNota(abaId) { const a = getAba(abaId); if (!a || a.tipo !== 'notas') return; abrirModalCriarNota(abaId); }
+
+    function abrirModalCriarNota(abaId) {
+      let selCor = document.documentElement.classList.contains('light') ? 'default' : 'default';
+      const body = document.createElement('div');
+      const ti = document.createElement('input'); ti.className = 'input'; ti.placeholder = 'Título'; lockSpace(ti);
+      ti.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); ok.click(); } });
+      const sp = document.createElement('div'); sp.className = 'spacer';
+      const ta = document.createElement('textarea'); ta.className = 'textarea big'; ta.placeholder = 'Conteúdo da nota'; lockSpace(ta);
+      const sp2 = document.createElement('div'); sp2.className = 'spacer';
+      body.appendChild(ti); body.appendChild(sp); body.appendChild(ta); body.appendChild(sp2);
+      body.appendChild(makeColorPicker('default', c => selCor = c));
+      const ok = document.createElement('button'); ok.className = 'btn primary'; ok.textContent = 'Adicionar';
+      ok.onclick = () => { const a = getAba(abaId); if (!a) return; a.notas.unshift({ id: uid(), titulo: ti.value.trim(), descricao: ta.value, cor: selCor }); render(); salvar(); closeModal(); };
+      const cancel = document.createElement('button'); cancel.className = 'btn'; cancel.textContent = 'Cancelar'; cancel.onclick = closeModal;
+      openModal('Nova nota', body, [cancel, ok]);
+    }
+
+    function abrirModalEditarNota(abaId, notaId) {
+      const a = getAba(abaId); if (!a) return;
+      const n = a.notas.find(x => x.id === notaId); if (!n) return;
+      let selCor = n.cor || 'default';
+      const body = document.createElement('div');
+      const ti = document.createElement('input'); ti.className = 'input'; ti.value = n.titulo; ti.placeholder = 'Título'; lockSpace(ti);
+      const sp = document.createElement('div'); sp.className = 'spacer';
+      const ta = document.createElement('textarea'); ta.className = 'textarea big'; ta.value = n.descricao; lockSpace(ta);
+      const sp2 = document.createElement('div'); sp2.className = 'spacer';
+      body.appendChild(ti); body.appendChild(sp); body.appendChild(ta); body.appendChild(sp2);
+      body.appendChild(makeColorPicker(selCor, c => selCor = c));
+      const ok = document.createElement('button'); ok.className = 'btn primary'; ok.textContent = 'Salvar';
+      ok.onclick = () => { Object.assign(n, { titulo: ti.value.trim(), descricao: ta.value, cor: selCor }); render(); salvar(); closeModal(); };
+      const cancel = document.createElement('button'); cancel.className = 'btn'; cancel.textContent = 'Cancelar'; cancel.onclick = closeModal;
+      openModal('Editar nota', body, [cancel, ok]);
+    }
+
+    function abrirModalMoverNota(abaId, notaId) {
+      const origem = getAba(abaId); if (!origem) return;
+      const n = origem.notas.find(x => x.id === notaId); if (!n) return;
+      const destinos = state.abas.filter(a => a.id !== abaId && a.tipo === 'notas');
+      if (!destinos.length) { showToast('Nenhuma outra aba de notas disponível'); return; }
+      const body = document.createElement('div');
+      const info = document.createElement('p'); info.style.cssText = 'margin-top:0;font-size:13px;color:var(--muted);'; info.textContent = 'Mover "' + (n.titulo || '(sem título)') + '" para:';
+      const list = document.createElement('div'); list.style.cssText = 'display:flex;flex-direction:column;gap:.35rem;margin-top:.5rem;';
+      destinos.forEach(dest => {
+        const btn = document.createElement('button'); btn.className = 'btn'; btn.textContent = dest.nome;
+        btn.onclick = () => { snapshot(); origem.notas = origem.notas.filter(x => x.id !== notaId); dest.notas.unshift(n); render(); salvar(); closeModal(); showToast('Nota movida para "' + dest.nome + '"'); };
+        list.appendChild(btn);
+      });
+      body.appendChild(info); body.appendChild(list);
+      const cancel = document.createElement('button'); cancel.className = 'btn'; cancel.textContent = 'Cancelar'; cancel.onclick = closeModal;
+      openModal('Mover nota', body, [cancel]);
+    }
+
+    let dragNoteId = null;
+    function buildNoteCard(abaId, nota) {
+      const wrap = document.createElement('article');
+      wrap.className = 'card'; wrap.dataset.id = nota.id; wrap.dataset.color = nota.cor || 'default';
+      wrap.draggable = true;
+      wrap.addEventListener('dragstart', ev => { dragNoteId = nota.id; ev.dataTransfer.effectAllowed = 'move'; ev.dataTransfer.setData('text/plain', 'note:' + nota.id); setTimeout(() => wrap.classList.add('dragging'), 0); });
+      wrap.addEventListener('dragend', () => { wrap.classList.remove('dragging'); dragNoteId = null; });
+      wrap.addEventListener('dragover', ev => { ev.preventDefault(); ev.stopPropagation(); if (dragNoteId && dragNoteId !== nota.id) wrap.classList.add('drag-over-card'); });
+      wrap.addEventListener('dragleave', () => wrap.classList.remove('drag-over-card'));
+      wrap.addEventListener('drop', ev => {
+        ev.preventDefault(); ev.stopPropagation(); wrap.classList.remove('drag-over-card');
+        const data = ev.dataTransfer.getData('text/plain'); if (!data.startsWith('note:')) return;
+        const srcId = data.replace('note:', ''); if (srcId === nota.id) return;
+        const a = getAba(abaId); if (!a) return;
+        const si = a.notas.findIndex(x => x.id === srcId); const di = a.notas.findIndex(x => x.id === nota.id);
+        if (si < 0 || di < 0) return; const [moved] = a.notas.splice(si, 1); a.notas.splice(di, 0, moved); render(); salvar();
+      });
+      wrap.addEventListener('dblclick', () => abrirModalEditarNota(abaId, nota.id));
+      wrap.addEventListener('contextmenu', ev => {
+        ev.preventDefault(); ev.stopPropagation();
+        openCtx(ev.clientX, ev.clientY, [
+          { label: 'Editar', fn: () => abrirModalEditarNota(abaId, nota.id) },
+          { label: 'Mover para...', fn: () => abrirModalMoverNota(abaId, nota.id) },
+          { type: 'sep' },
+          { label: 'Excluir', danger: true, fn: () => {
+            const a = getAba(abaId);
+            if (a) {
+              const n = a.notas.find(x => x.id === nota.id);
+              if (n) {
+                snapshot();
+                state.lixeira.unshift({ ...n, _abaId: abaId, _deletedAt: Date.now() });
+                if (state.lixeira.length > 200) state.lixeira.pop();
+                a.notas = a.notas.filter(x => x.id !== nota.id);
+                render(); salvar(); showToast('Nota movida para a Lixeira');
+              }
+            }
+          } },
+          { type: 'sep' }, { type: 'lbl', text: 'Cor da nota' },
+          { type: 'colors', cur: nota.cor || 'default', fn: (c) => { nota.cor = c; wrap.dataset.color = c; salvar(); } }
+        ]);
+      });
+      const head = document.createElement('div'); head.className = 'card-head';
+      const tw = document.createElement('div'); tw.className = 'titlewrap';
+      const h = document.createElement('h3'); h.textContent = nota.titulo || '(Sem título)'; tw.appendChild(h);
+      head.appendChild(tw);
+      const bcopy = document.createElement('button'); bcopy.className = 'iconbtn'; bcopy.title = 'Copiar';
+      bcopy.innerHTML = '<i class="bx bx-copy" style="font-size:16px"></i>';
+      bcopy.onclick = async ev => { ev.stopPropagation(); try { await navigator.clipboard.writeText(nota.descricao || ''); showToast('Copiado!'); } catch (e) { } };
+      head.appendChild(bcopy);
+      const d = document.createElement('div'); d.className = 'descricao'; d.textContent = nota.descricao || '';
+      wrap.appendChild(head); wrap.appendChild(d);
+      return wrap;
+    }
+
+    /* TABLE */
+    function getFilteredRows(tabela) {
+      const f = (tabela.filter || '').toLowerCase().trim();
+      let rows = tabela.linhas.map((r, i) => ({ r, i }));
+      if (f) rows = rows.filter(({ r }) => r.some(c => (c || '').toLowerCase().includes(f)));
+      if (tabela.sort && tabela.sort.col !== null) {
+        const ci = tabela.sort.col; const dir = tabela.sort.dir;
+        rows.sort((a, b) => {
+          const av = (a.r[ci] || '').toLowerCase(); const bv = (b.r[ci] || '').toLowerCase();
+          const n = parseFloat(av) - parseFloat(bv);
+          if (!isNaN(n) && av !== '' && bv !== '') return dir === 'asc' ? n : -n;
+          return dir === 'asc' ? av.localeCompare(bv, 'pt', { numeric: true }) : bv.localeCompare(av, 'pt', { numeric: true });
+        });
+      }
+      return rows;
+    }
+
+    function criarNovaTabela(abaId) {
+      const aba = getAba(abaId); if (!aba || aba.tipo !== 'tabela') return;
+      const novaTabela = { id: uid(), nome: 'Tabela ' + (aba.tabelas.length + 1), isDefault: false, colunas: Array.from({ length: 26 }).map(() => ({ id: uid(), nome: '' })), linhas: Array.from({ length: 26 }).map(() => Array(26).fill('')), cor: 'default', sort: { col: null, dir: 'asc' }, filter: '', linhasColoridas: {}, linhasFixas: [], colWidths: {}, cellConfig: {}, cellColors: {}, cellStyle: {} };
+      aba.tabelas.push(novaTabela);
+      aba.tabelaAtivaId = novaTabela.id;
+      salvar();
+      renderTableArea(aba);
+      showToast('Nova tabela criada');
+    }
+
+    function duplicarTabela(abaId, tabelaId) {
+      const aba = getAba(abaId); if (!aba) return;
+      const tabela = aba.tabelas.find(t => t.id === tabelaId); if (!tabela) return;
+      const novaCopia = { ...tabela, id: uid(), nome: tabela.nome + ' (cópia)', isDefault: false, linhas: tabela.linhas.map(r => [...r]), linhasColoridas: { ...tabela.linhasColoridas }, linhasFixas: [...tabela.linhasFixas], colunas: tabela.colunas.map(c => ({ ...c, id: uid() })), colWidths: { ...tabela.colWidths } };
+      aba.tabelas.push(novaCopia);
+      aba.tabelaAtivaId = novaCopia.id;
+      salvar();
+      renderTableArea(aba);
+      showToast('Tabela duplicada');
+    }
+
+    function excluirTabela(abaId, tabelaId) {
+      const aba = getAba(abaId); if (!aba) return;
+      aba.tabelas = aba.tabelas.filter(t => t.id !== tabelaId);
+      if (aba.tabelaAtivaId === tabelaId) aba.tabelaAtivaId = aba.tabelas.length ? aba.tabelas[0].id : null;
+      salvar();
+      renderTableArea(aba);
+      showToast('Tabela excluída');
+    }
+
+    /* ── FORMAT PAINTER — module-level so renderTblBody can reference it ── */
+    let _painterActive = false;
+    let _painterStyle = null;
+    let _painterTabela = null; // which tabela the painter belongs to
+    function applyPainter(table, tabela, ri, ci) {
+      if (!_painterActive || !_painterStyle || _painterTabela !== tabela) return;
+      snapshot();
+      if (!tabela.cellStyle) tabela.cellStyle = {};
+      if (!tabela.cellStyle[ri]) tabela.cellStyle[ri] = {};
+      tabela.cellStyle[ri][ci] = JSON.parse(JSON.stringify(_painterStyle));
+      salvar();
+      const trs2 = Array.from(table.querySelectorAll('tbody tr'));
+      const tr = trs2[ri]; if (!tr) return;
+      const td = tr.querySelectorAll('td:not(.row-num)')[ci]; if (!td) return;
+      applyCellStyleTD(td, tabela.cellStyle[ri][ci]);
+    }
+
+    function buildTableCard(aba, tabela) {
+      if (!tabela.sort) tabela.sort = { col: null, dir: 'asc' };
+      if (tabela.filter === undefined) tabela.filter = '';
+      if (!tabela.cor) tabela.cor = 'default';
+      if (!tabela.linhasColoridas) tabela.linhasColoridas = {};
+      if (!tabela.linhasFixas) tabela.linhasFixas = [];
+      if (!tabela.colWidths) tabela.colWidths = {};
+
+      const wrap = document.createElement('div'); wrap.className = 'table-card'; wrap.dataset.tcolor = tabela.cor;
+
+      /* head */
+      const head = document.createElement('div'); head.className = 'table-card-head';
+      const htitle = document.createElement('h3'); htitle.textContent = tabela.nome;
+      htitle.ondblclick = ev => {
+        ev.stopPropagation();
+        abrirModalRenomearTabela(aba.id, tabela.id);
+      };
+      /* Contextmenu em qualquer parte do card (exceto th de coluna e row-num que têm seu próprio) */
+      function openTableCtx(ev) {
+        ev.preventDefault(); ev.stopPropagation();
+        const items = [
+          { label: 'Renomear tabela', fn: () => abrirModalRenomearTabela(aba.id, tabela.id) },
+          { label: 'Duplicar tabela', fn: () => duplicarTabela(aba.id, tabela.id) },
+          { label: 'Limpar tabela', fn: () => { tabela.linhas = Array.from({ length: 26 }).map(() => tabela.colunas.map(() => '')); tabela.linhasColoridas = {}; tabela.linhasFixas = []; salvar(); renderTableArea(aba); showToast('Tabela limpa'); } },
+          { type: 'sep' },
+          { label: 'Excluir tabela', danger: true, fn: () => excluirTabela(aba.id, tabela.id) },
+          { type: 'sep' },
+          { type: 'lbl', text: 'Cor da tabela' },
+          { type: 'colors', cur: tabela.cor || 'default', fn: (c) => { tabela.cor = c; wrap.dataset.tcolor = c; salvar(); } }
+        ];
+        openCtx(ev.clientX, ev.clientY, items);
+      }
+      htitle.addEventListener('contextmenu', openTableCtx);
+      /* Também captura contextmenu no card inteiro exceto th de coluna e row-num */
+      wrap.addEventListener('contextmenu', ev => {
+        /* th e td.row-num têm menus próprios; td de célula bloqueia ctx */
+        if (ev.target.closest('th') || ev.target.closest('td.row-num')) return;
+        /* Se clicou dentro de uma célula de dados (td sem .row-num), bloqueia */
+        if (ev.target.closest('td') && !ev.target.closest('td.row-num')) return;
+        openTableCtx(ev);
+      });
+
+      const ha = document.createElement('div'); ha.className = 'thead-actions';
+
+      /* ── botão + Nova linha ── */
+      const bAddRow = document.createElement('button'); bAddRow.className = 'iconbtn'; bAddRow.title = 'Nova linha';
+      bAddRow.innerHTML = '<i class="bx bx-list-plus"></i>';
+      bAddRow.addEventListener('click', ev => { ev.stopPropagation(); tabela.linhas.push(tabela.colunas.map(() => '')); salvar(); renderTblBody(table, tabela); setTimeout(() => focusTblCell(table, tabela.linhas.length - 1, 0), 0); });
+      /* ── botão Dados — validação de célula ── */
+      const bDados = document.createElement('button'); bDados.className = 'iconbtn'; bDados.title = 'Validação de Dados';
+      bDados.innerHTML = '<i class="bx bx-data"></i>';
+      bDados.addEventListener('click', ev => {
+        ev.stopPropagation();
+        const r = selRange();
+        if (r) { abrirModalValidacaoCelula(aba.id, tabela.id, r); }
+        else { abrirModalEscolherColunaDados(aba.id, tabela.id); }
+      });
+      /* ── botão + Nova coluna ── */
+      const bAddCol = document.createElement('button'); bAddCol.className = 'iconbtn'; bAddCol.title = 'Nova coluna';
+      bAddCol.innerHTML = '<i class="bx bx-add-to-queue"></i>';
+      bAddCol.addEventListener('click', ev => { ev.stopPropagation(); tabela.colunas.push({ id: uid(), nome: '' }); tabela.linhas.forEach(r => r.push('')); salvar(); renderTblHead(table, tabela, aba); renderTblBody(table, tabela); });
+      /* ── botão copiar TSV ── */
+      const bcopyTbl = document.createElement('button'); bcopyTbl.className = 'iconbtn'; bcopyTbl.title = 'Copiar tabela (TSV)';
+      bcopyTbl.innerHTML = '<i class="bx bx-copy" style="font-size:16px"></i>';
+      bcopyTbl.addEventListener('click', ev => { ev.stopPropagation(); copiarTabelaTSV(); });
+      /* ── botão Excel ── */
+      const bExcel = document.createElement('button'); bExcel.className = 'iconbtn'; bExcel.title = 'Importar / Exportar Excel';
+      bExcel.innerHTML = '<i class="bx bx-spreadsheet" style="font-size:16px"></i>';
+      bExcel.addEventListener('click', ev => { ev.stopPropagation(); abrirModalExcel(aba.id, tabela.id, table); });
+      /* ── FORMAT BAR ── */
+      const fmtBar = document.createElement('div'); fmtBar.className = 'fmt-bar';
+
+      function makeFmtBtn(title, html, onClick) {
+        const b = document.createElement('button'); b.className = 'fmt-btn'; b.title = title;
+        b.innerHTML = html;
+        // Use mousedown + preventDefault to avoid stealing focus from the table selection
+        b.addEventListener('mousedown', ev => { ev.preventDefault(); ev.stopPropagation(); onClick(b); });
+        return b;
+      }
+
+      const bAlignL = makeFmtBtn('Alinhar à esquerda', '<svg viewBox="0 0 16 16" width="13" height="13" fill="currentColor"><rect x="1" y="2" width="14" height="2"/><rect x="1" y="6" width="9" height="2"/><rect x="1" y="10" width="12" height="2"/><rect x="1" y="14" width="7" height="2"/></svg>', () => applyStyleToRange(table, tabela, 'align', 'left'));
+      const bAlignC = makeFmtBtn('Centralizar', '<svg viewBox="0 0 16 16" width="13" height="13" fill="currentColor"><rect x="1" y="2" width="14" height="2"/><rect x="3.5" y="6" width="9" height="2"/><rect x="2" y="10" width="12" height="2"/><rect x="4.5" y="14" width="7" height="2"/></svg>', () => applyStyleToRange(table, tabela, 'align', 'center'));
+      const bAlignR = makeFmtBtn('Alinhar à direita', '<svg viewBox="0 0 16 16" width="13" height="13" fill="currentColor"><rect x="1" y="2" width="14" height="2"/><rect x="6" y="6" width="9" height="2"/><rect x="3" y="10" width="12" height="2"/><rect x="8" y="14" width="7" height="2"/></svg>', () => applyStyleToRange(table, tabela, 'align', 'right'));
+      const bBold = makeFmtBtn('Negrito', '<b>B</b>', () => applyStyleToRange(table, tabela, 'bold', true));
+
+      // Font color button with popup
+      const fColorWrap = document.createElement('div'); fColorWrap.className = 'fmt-color-wrap';
+      const fColorBtn = document.createElement('button'); fColorBtn.className = 'fmt-color-btn'; fColorBtn.title = 'Cor da fonte';
+      fColorBtn.innerHTML = '<span style="font-size:11px;font-weight:700;line-height:1">A</span><span class="color-bar" id="fmtColorBar_' + tabela.id + '"></span>';
+      const fColorPopup = document.createElement('div'); fColorPopup.className = 'fmt-color-popup';
+      fColorPopup.addEventListener('mousedown', e => e.stopPropagation());
+
+      let _activeFontColor = 'default';
+      FONT_COLORS.forEach(col => {
+        const sw = document.createElement('div'); sw.className = 'fmt-color-swatch';
+        sw.style.background = col === 'default' ? 'var(--muted)' : col;
+        sw.title = FONT_COLOR_LABELS[col] || col;
+        if (col === 'default') sw.innerHTML = '<svg viewBox="0 0 20 20" width="20" height="20"><line x1="4" y1="16" x2="16" y2="4" stroke="var(--text)" stroke-width="2"/></svg>';
+        sw.addEventListener('mousedown', ev => {
+          ev.preventDefault(); ev.stopPropagation();
+          const realCol = col === 'default' ? null : col;
+          applyStyleToRange(table, tabela, 'color', realCol);
+          _activeFontColor = col;
+          const bar = document.getElementById('fmtColorBar_' + tabela.id);
+          if (bar) bar.style.background = realCol || 'var(--muted)';
+          fColorPopup.classList.remove('open');
+        });
+        fColorPopup.appendChild(sw);
+      });
+
+      fColorBtn.addEventListener('mousedown', ev => {
+        ev.preventDefault(); ev.stopPropagation();
+        const isOpen = fColorPopup.classList.contains('open');
+        fColorPopup.classList.remove('open');
+        if (!isOpen) {
+          const rect = fColorBtn.getBoundingClientRect();
+          fColorPopup.style.top = (rect.bottom + 5) + 'px';
+          fColorPopup.style.left = rect.left + 'px';
+          fColorPopup.classList.add('open');
+        }
+      });
+      document.addEventListener('mousedown', ev => { if (!fColorWrap.contains(ev.target)) fColorPopup.classList.remove('open'); });
+      fColorWrap.appendChild(fColorBtn);
+      document.body.appendChild(fColorPopup);
+      // Remove from body when table is removed
+      const _fColorCleanup = new MutationObserver(() => { if (!document.contains(fColorBtn)) { fColorPopup.remove(); _fColorCleanup.disconnect(); } });
+      _fColorCleanup.observe(document.body, { childList: true, subtree: true });
+
+      const fmtSep = document.createElement('div'); fmtSep.className = 'fmt-sep';
+
+      fmtBar.appendChild(bAlignL); fmtBar.appendChild(bAlignC); fmtBar.appendChild(bAlignR);
+      fmtBar.appendChild(fmtSep);
+      fmtBar.appendChild(bBold);
+      fmtBar.appendChild(fColorWrap);
+
+      // Apply style to selected range
+      function applyStyleToRange(table, tabela, prop, val) {
+        if (selState.tabelaId !== tabela.id) { showToast('Selecione células na tabela primeiro'); return; }
+        const r = selRange(); if (!r) return;
+        snapshot();
+        if (!tabela.cellStyle) tabela.cellStyle = {};
+        for (let ri = r.r1; ri <= r.r2; ri++) {
+          if (!tabela.cellStyle[ri]) tabela.cellStyle[ri] = {};
+          for (let ci = r.c1; ci <= r.c2; ci++) {
+            if (!tabela.cellStyle[ri][ci]) tabela.cellStyle[ri][ci] = {};
+            if (prop === 'bold') {
+              tabela.cellStyle[ri][ci].bold = !tabela.cellStyle[ri][ci].bold;
+            } else if (val === null || val === 'default') {
+              delete tabela.cellStyle[ri][ci][prop];
+            } else if (tabela.cellStyle[ri][ci][prop] === val) {
+              delete tabela.cellStyle[ri][ci][prop]; // toggle off
+            } else {
+              tabela.cellStyle[ri][ci][prop] = val;
+            }
+          }
+        }
+        salvar();
+        // Re-apply styles without full re-render
+        const trs = Array.from(table.querySelectorAll('tbody tr'));
+        for (let ri = r.r1; ri <= r.r2; ri++) {
+          const tr = trs[ri]; if (!tr) continue;
+          const tds = Array.from(tr.querySelectorAll('td:not(.row-num)'));
+          for (let ci = r.c1; ci <= r.c2; ci++) {
+            const td = tds[ci]; if (!td) continue;
+            applyCellStyleTD(td, tabela.cellStyle[ri][ci] || {});
+          }
+        }
+        updateFmtBar(table, tabela);
+      }
+
+      // Update fmt bar button states based on selection anchor
+      function updateFmtBar(table, tabela) {
+        const r = selRange();
+        if (!r || selState.tabelaId !== tabela.id) {
+          [bAlignL, bAlignC, bAlignR, bBold].forEach(b => b.classList.remove('active'));
+          return;
+        }
+        const s = getCellStyle(tabela, r.r1, r.c1);
+        bAlignL.classList.toggle('active', !s.align || s.align === 'left');
+        bAlignC.classList.toggle('active', s.align === 'center');
+        bAlignR.classList.toggle('active', s.align === 'right');
+        bBold.classList.toggle('active', !!s.bold);
+      }
+
+      /* ── A-Z Sort toggle button ── */
+      const bSortAZ = document.createElement('button'); bSortAZ.className = 'iconbtn'; bSortAZ.title = 'Ordenar A→Z / Z→A';
+      function updateSortAZBtn() {
+        const hasSort = tabela.sort && tabela.sort.col !== null;
+        const dir = hasSort ? tabela.sort.dir : 'asc';
+        bSortAZ.classList.toggle('active', hasSort);
+        bSortAZ.innerHTML = dir === 'asc'
+          ? '<i class="bx bx-sort-up" style="font-size:15px"></i>'
+          : '<i class="bx bx-sort-down" style="font-size:15px"></i>';
+        bSortAZ.title = hasSort ? (dir === 'asc' ? 'Ordenado A→Z (clique para Z→A)' : 'Ordenado Z→A (clique para remover)') : 'Ordenar A→Z';
+      }
+      updateSortAZBtn();
+      bSortAZ.addEventListener('mousedown', ev => {
+        ev.preventDefault(); ev.stopPropagation();
+        // Determine sort column: from selection or current sort col
+        let sortCol = null;
+        if (selState.tabelaId === tabela.id && selState.anchor !== null) {
+          sortCol = selState.anchor.ci;
+        } else if (tabela.sort && tabela.sort.col !== null) {
+          sortCol = tabela.sort.col;
+        } else {
+          sortCol = 0;
+        }
+        const currentDir = (tabela.sort && tabela.sort.col === sortCol) ? tabela.sort.dir : null;
+        if (currentDir === null) {
+          tabela.sort = { col: sortCol, dir: 'asc' };
+        } else if (currentDir === 'asc') {
+          tabela.sort = { col: sortCol, dir: 'desc' };
+        } else {
+          tabela.sort = { col: null, dir: 'asc' };
+        }
+        updateSortAZBtn();
+        salvar(); renderTblHead(table, tabela, aba); renderTblBody(table, tabela); updateFoot();
+        // Also update the old SF popup state if it still exists in data
+        const colName = sortCol !== null && tabela.colunas[sortCol] ? (tabela.colunas[sortCol].nome || getColName(sortCol)) : '';
+        if (tabela.sort.col !== null) showToast('Ordenado por ' + colName + ' (' + (tabela.sort.dir === 'asc' ? 'A→Z' : 'Z→A') + ')');
+        else showToast('Ordenação removida');
+      });
+
+      /* ── Expandable Search ── */
+      const searchWrap = document.createElement('div');
+      searchWrap.style.cssText = 'display:flex;align-items:center;position:relative;transition:width .2s;';
+      const bSearch = document.createElement('button'); bSearch.className = 'iconbtn'; bSearch.title = 'Pesquisar';
+      bSearch.innerHTML = '<i class="bx bx-search" style="font-size:15px"></i>';
+      const searchInp = document.createElement('input'); searchInp.type = 'text';
+      searchInp.className = 'tbl-search-inp';
+      searchInp.placeholder = 'Pesquisar…'; searchInp.value = tabela.filter || '';
+      let searchOpen = !!(tabela.filter && tabela.filter.trim());
+      function openSearch() {
+        searchOpen = true;
+        searchInp.style.width = '130px'; searchInp.style.opacity = '1'; searchInp.style.padding = '0 .5rem'; searchInp.style.pointerEvents = 'auto';
+        bSearch.classList.add('active');
+        setTimeout(() => searchInp.focus(), 50);
+      }
+      function closeSearch() {
+        if (searchInp.value) return;
+        searchOpen = false;
+        searchInp.style.width = '0'; searchInp.style.opacity = '0'; searchInp.style.padding = '0'; searchInp.style.pointerEvents = 'none';
+        bSearch.classList.remove('active');
+      }
+      if (searchOpen) { searchInp.style.width='130px'; searchInp.style.opacity='1'; searchInp.style.padding='0 .5rem'; searchInp.style.pointerEvents='auto'; bSearch.classList.add('active'); }
+      bSearch.addEventListener('mousedown', ev => {
+        ev.preventDefault(); ev.stopPropagation();
+        if (!searchOpen) { openSearch(); } else { searchInp.value=''; tabela.filter=''; salvar(); renderTblBody(table,tabela); updateFoot(); closeSearch(); }
+      });
+      searchInp.addEventListener('keydown', e => { e.stopPropagation(); if (e.key==='Escape') { searchInp.value=''; tabela.filter=''; salvar(); renderTblBody(table,tabela); updateFoot(); closeSearch(); } });
+      searchInp.addEventListener('mousedown', e => e.stopPropagation());
+      searchInp.addEventListener('input', () => { tabela.filter = searchInp.value; salvar(); renderTblBody(table, tabela); updateFoot(); });
+      searchInp.addEventListener('blur', () => { if (!searchInp.value) closeSearch(); });
+      searchWrap.appendChild(bSearch); searchWrap.appendChild(searchInp);
+
+      /* ── Format Painter button ── */
+      const bPainter = document.createElement('button'); bPainter.className = 'fmt-btn'; bPainter.title = 'Copiar formatação (Pincel)';
+      bPainter.innerHTML = '<i class="bx bx-paint" style="font-size:13px"></i>';
+      bPainter.addEventListener('mousedown', ev => {
+        ev.preventDefault(); ev.stopPropagation();
+        if (_painterActive) {
+          _painterActive = false; _painterStyle = null;
+          bPainter.classList.remove('active');
+          table.style.cursor = '';
+          showToast('Pincel desativado');
+          return;
+        }
+        const r = selRange();
+        if (!r || selState.tabelaId !== tabela.id) { showToast('Selecione uma célula primeiro'); return; }
+        _painterStyle = getCellStyle(tabela, r.r1, r.c1);
+        _painterActive = true;
+        _painterTabela = tabela;
+        bPainter.classList.add('active');
+        const _tbl = wrap.querySelector('table.tbl'); if (_tbl) _tbl.style.cursor = 'copy';
+        showToast('Pincel ativo — clique e arraste para aplicar');
+      });
+
+      /* ── Clear Content button ── */
+      const bClearContent = document.createElement('button'); bClearContent.className = 'fmt-btn'; bClearContent.title = 'Limpar conteúdo da seleção';
+      bClearContent.innerHTML = '<i class="bx bx-eraser" style="font-size:13px"></i>';
+      bClearContent.addEventListener('mousedown', ev => {
+        ev.preventDefault(); ev.stopPropagation();
+        if (selState.tabelaId !== tabela.id) { showToast('Selecione células primeiro'); return; }
+        snapshot(); deleteSelection(table, tabela);
+      });
+
+      /* ── Theme toggle button (last in toolbar) ── */
+      if (!tabela.tblTheme) tabela.tblTheme = 'dark';
+      const bTheme = document.createElement('button'); bTheme.className = 'iconbtn'; bTheme.title = 'Alternar tema da tabela';
+      function updateThemeBtn() {
+        const isLight = tabela.tblTheme === 'light';
+        bTheme.innerHTML = isLight
+          ? '<i class="bx bx-sun" style="font-size:15px"></i>'
+          : '<i class="bx bx-moon" style="font-size:15px"></i>';
+        bTheme.title = isLight ? 'Tema claro ativo (clique para escuro)' : 'Tema escuro ativo (clique para claro)';
+        bTheme.classList.toggle('active', isLight);
+        wrap.classList.toggle('tbl-light', isLight);
+        fColorPopup.classList.toggle('tbl-light', isLight);
+      }
+      updateThemeBtn();
+      bTheme.addEventListener('mousedown', ev => {
+        ev.preventDefault(); ev.stopPropagation();
+        tabela.tblTheme = tabela.tblTheme === 'light' ? 'dark' : 'light';
+        salvar();
+        updateThemeBtn();
+      });
+
+      // Show active indicator on sort/filter button when active
+      function updateSfBtnState() {
+        // No separate sfWrap anymore; handled by bSortAZ and bSearch
+      }
+      updateSfBtnState();
+
+      // Final toolbar assembly — order: fmtBar | bSortAZ | searchWrap | bDados | bAddRow | bAddCol | bExcel | bcopyTbl
+      ha.appendChild(fmtBar);
+      const fmtPainterSep = document.createElement('div'); fmtPainterSep.className = 'fmt-sep'; fmtBar.appendChild(fmtPainterSep);
+      fmtBar.appendChild(bPainter);
+      fmtBar.appendChild(bClearContent);
+      const tbSep1 = document.createElement('div'); tbSep1.className = 'fmt-sep'; ha.appendChild(tbSep1);
+      ha.appendChild(bSortAZ);
+      ha.appendChild(searchWrap);
+      const tbSep2 = document.createElement('div'); tbSep2.className = 'fmt-sep'; ha.appendChild(tbSep2);
+      ha.appendChild(bDados);
+      const tbSep3 = document.createElement('div'); tbSep3.className = 'fmt-sep'; ha.appendChild(tbSep3);
+      ha.appendChild(bAddRow); ha.appendChild(bAddCol);
+      const tbSep4 = document.createElement('div'); tbSep4.className = 'fmt-sep'; ha.appendChild(tbSep4);
+      ha.appendChild(bExcel); ha.appendChild(bcopyTbl);
+      const tbSep5 = document.createElement('div'); tbSep5.className = 'fmt-sep'; ha.appendChild(tbSep5);
+      ha.appendChild(bTheme);
+
+      head.appendChild(ha); wrap.appendChild(head);
+
+      /* table */
+      const tw = document.createElement('div'); tw.className = 'tbl-wrap';
+      const table = document.createElement('table'); table.className = 'tbl';
+
+      /* Apply painter on mouseup to finalize */
+      table.addEventListener('mouseup', () => {
+        if (_painterActive) {
+          _painterActive = false; _painterStyle = null; _painterTabela = null;
+          if (bPainter) bPainter.classList.remove('active');
+          table.style.cursor = '';
+        }
+      });
+
+      /* Deselect _selAll when clicking outside the table — registered once */
+      function onOutsideClick(ev) {
+        if (!document.contains(table)) { document.removeEventListener('mousedown', onOutsideClick, true); return; }
+        if (!wrap.contains(ev.target) && tabela._selAll) {
+          tabela._selAll = false;
+          renderTblHead(table, tabela, aba);
+          renderTblBody(table, tabela);
+        }
+      }
+      document.addEventListener('mousedown', onOutsideClick, true);
+
+      renderTblHead(table, tabela, aba); renderTblBody(table, tabela);
+      tw.appendChild(table); wrap.appendChild(tw);
+
+      /* footer */
+      const foot = document.createElement('div'); foot.className = 'table-footer';
+      const finfo = document.createElement('span'); finfo.className = 'table-footer-info';
+      foot.appendChild(finfo); wrap.appendChild(foot);
+      function updateFoot() {
+        const vis = getFilteredRows(tabela);
+        finfo.textContent = tabela.linhas.length + ' linha' + (tabela.linhas.length !== 1 ? 's' : '') + ' · ' + tabela.colunas.length + ' coluna' + (tabela.colunas.length !== 1 ? 's' : '') + (tabela.filter ? ' · ' + vis.length + ' visível' + (vis.length !== 1 ? 's' : '') : '');
+      }
+      updateFoot();
+
+      /* botão copiar tabela como TSV (compatível com Excel) */
+      function copiarTabelaTSV() {
+        const header = tabela.colunas.map((col, ci) => col.nome || getColName(ci)).join('\t');
+        const body = tabela.linhas.map(r => tabela.colunas.map((_, ci) => r[ci] || '').join('\t')).join('\n');
+        const tsv = header + '\n' + body;
+        navigator.clipboard.writeText(tsv).then(() => showToast('Tabela copiada!')).catch(() => {
+          const ta = document.createElement('textarea'); ta.value = tsv; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); showToast('Tabela copiada!');
+        });
+      }
+
+      return wrap;
+    }
+
+    // Cell-range validation: applies colConfig to the ci of each column in the selected range
+    function abrirModalValidacaoCelula(abaId, tabelaId, selR) {
+      // We configure the validation for the anchor column, then replicate across the selection
+      const aba = getAba(abaId); if (!aba) return;
+      const tabela = aba.tabelas.find(t => t.id === tabelaId); if (!tabela) return;
+      if (!tabela.colConfig) tabela.colConfig = {};
+      const ci = selR.c1;
+      const config = tabela.colConfig[ci] || { type: 'texto', options: [] };
+
+      const body = document.createElement('div');
+      // Info tag showing which cells are affected
+      const info = document.createElement('div');
+      info.style.cssText='font-size:12px;color:var(--muted);margin-bottom:.75rem;padding:.4rem .6rem;background:var(--surface-2);border-radius:6px;border:1px solid var(--border);';
+      const colCount = selR.c2 - selR.c1 + 1;
+      const rowCount = selR.r2 - selR.r1 + 1;
+      info.textContent = `Aplicando em ${rowCount} linha${rowCount>1?'s':''} × ${colCount} coluna${colCount>1?'s':''} selecionada${colCount>1?'s':''}`;
+      body.appendChild(info);
+
+      const chooser = document.createElement('div'); chooser.className = 'type-chooser';
+      let selType = config.type || 'texto';
+      [
+        { id: 'texto', label: 'Texto', desc: 'Texto livre' },
+        { id: 'data', label: 'Data 📅', desc: 'Calendário' },
+        { id: 'lista', label: 'Lista ▾', desc: 'Opções coloridas' }
+      ].forEach(opt => {
+        const d = document.createElement('div'); d.className = 'type-opt' + (opt.id === selType ? ' selected' : '');
+        d.innerHTML = `<span>${opt.label}</span><small style="color:var(--muted);font-weight:400">${opt.desc}</small>`;
+        d.onclick = () => { selType = opt.id; chooser.querySelectorAll('.type-opt').forEach(x => x.classList.remove('selected')); d.classList.add('selected'); optsContainer.style.display = selType === 'lista' ? 'block' : 'none'; };
+        chooser.appendChild(d);
+      });
+      body.appendChild(chooser);
+
+      const optsContainer = document.createElement('div'); optsContainer.style.display = selType === 'lista' ? 'block' : 'none';
+      const optsTitle = document.createElement('h4'); optsTitle.textContent = 'Opções da Lista:'; optsTitle.style.cssText='margin:1rem 0 .5rem;font-size:13px';
+      optsContainer.appendChild(optsTitle);
+      const optsList = document.createElement('div'); optsList.style.cssText='display:flex;flex-direction:column;gap:.4rem;';
+      let currentOptions = JSON.parse(JSON.stringify(config.options || []));
+      function renderOpts() {
+        optsList.innerHTML = '';
+        currentOptions.forEach((o, i) => {
+          const row = document.createElement('div'); row.style.cssText='display:flex;gap:.5rem;align-items:center;';
+          const inp = document.createElement('input'); inp.className='input'; inp.style.flex='1'; inp.value=o.label; inp.placeholder='Nome da opção'; inp.oninput=()=>o.label=inp.value;
+          let curColor = o.color||'default';
+          const colorBtn = document.createElement('div'); colorBtn.className='csw'; colorBtn.style.background=CDOTS[curColor]; colorBtn.title='Cor';
+          colorBtn.onclick=ev=>{ev.stopPropagation();openCtx(ev.clientX,ev.clientY,[{type:'colors',cur:curColor,fn:co=>{curColor=co;o.color=co;colorBtn.style.background=CDOTS[co];}}]);};
+          const delBtn=document.createElement('button'); delBtn.className='iconbtn'; delBtn.innerHTML='✕'; delBtn.onclick=()=>{currentOptions.splice(i,1);renderOpts();};
+          row.appendChild(colorBtn); row.appendChild(inp); row.appendChild(delBtn); optsList.appendChild(row);
+        });
+        const addBtn=document.createElement('button'); addBtn.className='btn'; addBtn.textContent='+ Adicionar Opção'; addBtn.style.marginTop='.5rem';
+        addBtn.onclick=()=>{currentOptions.push({id:uid(),label:'Nova opção',color:'default'});renderOpts();};
+        optsList.appendChild(addBtn);
+      }
+      renderOpts(); optsContainer.appendChild(optsList); body.appendChild(optsContainer);
+
+      const ok = document.createElement('button'); ok.className='btn primary'; ok.textContent='Aplicar';
+      ok.onclick = () => {
+        snapshot();
+        const cfg = { type: selType, options: currentOptions };
+        // Apply ONLY to the selected cells (not the entire column)
+        if (!tabela.cellConfig) tabela.cellConfig = {};
+        for (let r2 = selR.r1; r2 <= selR.r2; r2++) {
+          if (!tabela.cellConfig[r2]) tabela.cellConfig[r2] = {};
+          for (let c2 = selR.c1; c2 <= selR.c2; c2++) {
+            tabela.cellConfig[r2][c2] = JSON.parse(JSON.stringify(cfg));
+          }
+        }
+        salvar();
+        // Re-render the table area so changes appear immediately
+        renderTableArea(aba);
+        closeModal();
+        showToast('Validação aplicada em ' + ((selR.r2-selR.r1+1)*(selR.c2-selR.c1+1)) + ' célula(s)!');
+      };
+      const cancel=document.createElement('button'); cancel.className='btn'; cancel.textContent='Cancelar'; cancel.onclick=closeModal;
+      openModal('Validação de Dados', body, [cancel, ok]);
+    }
+
+    function abrirModalEscolherColunaDados(abaId, tabelaId) {
+      const aba = getAba(abaId); if (!aba) return;
+      const tabela = aba.tabelas.find(t => t.id === tabelaId); if (!tabela) return;
+      const body = document.createElement('div');
+      const info = document.createElement('p'); info.style.cssText = 'margin-top:0;font-size:13px;color:var(--muted)'; info.textContent = 'Escolha a coluna para configurar validação de dados:';
+      const list = document.createElement('div'); list.style.cssText = 'display:flex;flex-direction:column;gap:.3rem;margin-top:.5rem;max-height:320px;overflow-y:auto;';
+      tabela.colunas.forEach((col, ci) => {
+        const cfg = tabela.colConfig && tabela.colConfig[ci];
+        const typeLabel = cfg ? ({texto:'Texto',data:'Data 📅',lista:'Lista ▾'}[cfg.type] || 'Texto') : 'Texto';
+        const btn = document.createElement('button'); btn.className = 'btn';
+        btn.style.cssText = 'display:flex;justify-content:space-between;align-items:center;';
+        btn.innerHTML = `<span>${col.nome || getColName(ci)}</span><small style="color:var(--muted);font-size:11px">${typeLabel}</small>`;
+        btn.onclick = () => { closeModal(); abrirModalConfigurarColuna(abaId, tabelaId, ci); };
+        list.appendChild(btn);
+      });
+      body.appendChild(info); body.appendChild(list);
+      const cancel = document.createElement('button'); cancel.className = 'btn'; cancel.textContent = 'Cancelar'; cancel.onclick = closeModal;
+      openModal('Dados — Validação de Coluna', body, [cancel]);
+    }
+
+    function abrirModalRenomearTabela(abaId, tabelaId) {
+      const aba = getAba(abaId); if (!aba) return;
+      const tabela = aba.tabelas.find(t => t.id === tabelaId); if (!tabela) return;
+      const body = document.createElement('div');
+      const inp = document.createElement('input'); inp.className = 'input'; inp.placeholder = 'Nome da tabela'; inp.value = tabela.nome;
+      inp.addEventListener('keydown', e => { if (e.key === ' ') e.stopPropagation(); if (e.key === 'Enter') { e.preventDefault(); ok.click(); } });
+      body.appendChild(inp);
+      const ok = document.createElement('button'); ok.className = 'btn primary'; ok.textContent = 'Renomear';
+      ok.onclick = () => { const v = inp.value.trim(); if (v) { tabela.nome = v; render(); salvar(); closeModal(); showToast('Tabela renomeada'); } };
+      const cancel = document.createElement('button'); cancel.className = 'btn'; cancel.textContent = 'Cancelar'; cancel.onclick = closeModal;
+      openModal('Renomear tabela', body, [cancel, ok]);
+    }
+
+    function abrirModalConfigurarColuna(abaId, tabelaId, ci) {
+      const aba = getAba(abaId); if (!aba) return;
+      const tabela = aba.tabelas.find(t => t.id === tabelaId); if (!tabela) return;
+      if (!tabela.colConfig) tabela.colConfig = {};
+      const config = tabela.colConfig[ci] || { type: 'texto', options: [] };
+
+      const body = document.createElement('div');
+
+      const chooser = document.createElement('div'); chooser.className = 'type-chooser';
+      let selType = config.type || 'texto';
+      [
+        { id: 'texto', label: 'Texto', desc: 'Texto livre' },
+        { id: 'data', label: 'Data', desc: 'Calendário' },
+        { id: 'lista', label: 'Lista Suspensa', desc: 'Opções coloridas' }
+      ].forEach(opt => {
+        const d = document.createElement('div'); d.className = 'type-opt' + (opt.id === selType ? ' selected' : '');
+        d.innerHTML = `<span>${opt.label}</span><small style="color:var(--muted);font-weight:400">${opt.desc}</small>`;
+        d.onclick = () => {
+          selType = opt.id;
+          chooser.querySelectorAll('.type-opt').forEach(x => x.classList.remove('selected'));
+          d.classList.add('selected');
+          optsContainer.style.display = selType === 'lista' ? 'block' : 'none';
+        };
+        chooser.appendChild(d);
+      });
+      body.appendChild(chooser);
+      body.appendChild(document.createElement('br'));
+
+      const optsContainer = document.createElement('div');
+      optsContainer.style.display = selType === 'lista' ? 'block' : 'none';
+      const optsTitle = document.createElement('h4'); optsTitle.textContent = 'Opções da Lista:'; optsTitle.style.cssText = 'margin:1rem 0 0.5rem;font-size:13px';
+      optsContainer.appendChild(optsTitle);
+
+      const optsList = document.createElement('div'); optsList.style.display = 'flex'; optsList.style.flexDirection = 'column'; optsList.style.gap = '0.4rem';
+      let currentOptions = JSON.parse(JSON.stringify(config.options || []));
+
+      function renderOpts() {
+        optsList.innerHTML = '';
+        currentOptions.forEach((o, i) => {
+          const row = document.createElement('div'); row.style.display = 'flex'; row.style.gap = '0.5rem'; row.style.alignItems = 'center';
+          const inp = document.createElement('input'); inp.className = 'input'; inp.style.flex = '1'; inp.value = o.label; inp.placeholder = 'Nome da opção';
+          inp.oninput = () => o.label = inp.value;
+
+          let curColor = o.color || 'default';
+          const colorBtn = document.createElement('div'); colorBtn.className = 'csw'; colorBtn.style.background = CDOTS[curColor]; colorBtn.title = 'Cor da opção';
+          colorBtn.onclick = (ev) => {
+            ev.stopPropagation();
+            openCtx(ev.clientX, ev.clientY, [
+              { type: 'colors', cur: curColor, fn: (c) => { curColor = c; o.color = c; colorBtn.style.background = CDOTS[c]; } }
+            ]);
+          };
+
+          const delBtn = document.createElement('button'); delBtn.className = 'iconbtn'; delBtn.innerHTML = '✕'; delBtn.onclick = () => { currentOptions.splice(i, 1); renderOpts(); };
+          row.appendChild(colorBtn); row.appendChild(inp); row.appendChild(delBtn);
+          optsList.appendChild(row);
+        });
+        const addBtn = document.createElement('button'); addBtn.className = 'btn'; addBtn.textContent = '+ Adicionar Opção'; addBtn.style.marginTop = '0.5rem';
+        addBtn.onclick = () => { currentOptions.push({ id: uid(), label: 'Nova opção', color: 'default' }); renderOpts(); };
+        optsList.appendChild(addBtn);
+      }
+      renderOpts();
+      optsContainer.appendChild(optsList);
+      body.appendChild(optsContainer);
+
+      const ok = document.createElement('button'); ok.className = 'btn primary'; ok.textContent = 'Salvar';
+      ok.onclick = () => {
+        tabela.colConfig[ci] = { type: selType, options: currentOptions };
+        salvar(); render(); closeModal(); showToast('Coluna configurada');
+      };
+      const cancel = document.createElement('button'); cancel.className = 'btn'; cancel.textContent = 'Cancelar'; cancel.onclick = closeModal;
+      openModal('Configurar Coluna', body, [cancel, ok]);
+    }
+
+    function renderTblHead(table, tabela, aba) {
+      let thead = table.querySelector('thead');
+      if (!thead) { thead = document.createElement('thead'); table.insertBefore(thead, table.firstChild); }
+      thead.innerHTML = '';
+      if (tabela._selAll) table.classList.add('all-selected'); else table.classList.remove('all-selected');
+      const hrow = document.createElement('tr');
+      /* célula vazia alinhando com row-num do tbody */
+      const rnumTh = document.createElement('th'); rnumTh.className = 'row-num-th';
+      const selAllBtn = document.createElement('div'); selAllBtn.className = 'select-all-btn'; selAllBtn.innerHTML = '◢'; selAllBtn.title = 'Selecionar Todos';
+      selAllBtn.onclick = (e) => { e.stopPropagation(); tabela._selAll = !tabela._selAll; renderTblHead(table, tabela, aba); renderTblBody(table, tabela); };
+      rnumTh.appendChild(selAllBtn);
+      hrow.appendChild(rnumTh);
+
+      tabela.colunas.forEach((col, ci) => {
+        const th = document.createElement('th');
+        const inner = document.createElement('div'); inner.className = 'th-inner';
+        const lbl = document.createElement('span'); lbl.className = 'th-lbl';
+        const colCfg = tabela.colConfig && tabela.colConfig[ci];
+        const typeIcons = { data: '📅', lista: '▾' };
+        lbl.textContent = (col.nome || getColName(ci)) + (colCfg && colCfg.type !== 'texto' ? ' ' + (typeIcons[colCfg.type] || '') : '');
+        const si = document.createElement('span'); si.className = 'sort-icon';
+        si.textContent = tabela.sort && tabela.sort.col === ci ? (tabela.sort.dir === 'asc' ? '▲' : '▼') : '⇅';
+        function excluirColuna(ci) {
+          if (tabela.colunas.length <= 1) { showToast('A tabela precisa ter ao menos uma coluna'); return; }
+          snapshot();
+          tabela.colunas.splice(ci, 1);
+          tabela.linhas.forEach(r => r.splice(ci, 1));
+          // Shift/remove cellConfig entries for deleted column
+          if (tabela.cellConfig) {
+            Object.keys(tabela.cellConfig).forEach(ri => {
+              const row = tabela.cellConfig[ri];
+              delete row[ci];
+              const shifted = {};
+              Object.keys(row).forEach(k => { const ki=parseInt(k); shifted[ki>ci?ki-1:ki]=row[k]; });
+              tabela.cellConfig[ri] = shifted;
+            });
+          }
+          // Shift/remove cellColors entries for deleted column
+          if (tabela.cellColors) {
+            Object.keys(tabela.cellColors).forEach(ri => {
+              const row = tabela.cellColors[ri];
+              delete row[ci];
+              const shifted = {};
+              Object.keys(row).forEach(k => { const ki=parseInt(k); shifted[ki>ci?ki-1:ki]=row[k]; });
+              tabela.cellColors[ri] = shifted;
+            });
+          }
+          // Shift colConfig
+          if (tabela.colConfig) {
+            const newCfg = {};
+            Object.keys(tabela.colConfig).forEach(k => { const ki=parseInt(k); if (ki===ci) return; newCfg[ki>ci?ki-1:ki]=tabela.colConfig[k]; });
+            tabela.colConfig = newCfg;
+          }
+          if (tabela.sort && tabela.sort.col !== null) {
+            if (tabela.sort.col === ci) tabela.sort = { col: null, dir: 'asc' };
+            else if (tabela.sort.col > ci) tabela.sort.col--;
+          }
+          salvar(); renderTblHead(table, tabela, aba); renderTblBody(table, tabela);
+        }
+        // Sort removed from TH click — use Classificar e Filtrar toolbar button
+
+        // ── Column drag handle strip (mirrors rnum-drag for rows) ──
+        const thDrag = document.createElement('span'); thDrag.className = 'th-drag'; thDrag.title = 'Arrastar para mover coluna';
+        thDrag.innerHTML = '&#8942;&#8942;'; // ⠿ dots
+        thDrag.draggable = true;
+        thDrag.addEventListener('dragstart', ev => {
+          ev.stopPropagation();
+          ev.dataTransfer.setData('col-drag', String(ci)); ev.dataTransfer.effectAllowed = 'move'; th.style.opacity = '.45';
+        });
+        thDrag.addEventListener('dragend', () => { th.style.opacity = ''; });
+        th.appendChild(thDrag);
+
+        // ── Column selection: mousedown on inner label area selects entire column ──
+        inner.addEventListener('mousedown', ev => {
+          if (ev.target.classList.contains('resizer') || ev.target.classList.contains('th-edit') || ev.target.classList.contains('th-drag')) return;
+          if (ev.button !== 0) return;
+          ev.stopPropagation();
+          selState.tabelaId = tabela.id; selState.mouseDown = true; selState.colSelecting = true; selState.rowSelecting = false;
+          selState.anchor = {ri:0, ci}; selState.head = {ri: tabela.linhas.length - 1, ci};
+          applySelectionStyles(table, tabela);
+          updateFmtBar(table, tabela);
+        });
+        th.addEventListener('mousemove', () => {
+          if (!selState.mouseDown || !selState.colSelecting) return;
+          selState.head = {ri: tabela.linhas.length - 1, ci};
+          applySelectionStyles(table, tabela);
+        });
+
+        /* Column drag-over / drop targets stay on TH */
+        th.addEventListener('dragover', ev => {
+          if (!ev.dataTransfer.types || !(ev.dataTransfer.types.indexOf ? ev.dataTransfer.types.indexOf('col-drag') >= 0 : ev.dataTransfer.types.includes('col-drag'))) return;
+          ev.preventDefault(); ev.stopPropagation(); th.classList.add('col-drag-over');
+        });
+        th.addEventListener('dragleave', () => th.classList.remove('col-drag-over'));
+        th.addEventListener('drop', ev => {
+          ev.preventDefault(); ev.stopPropagation(); th.classList.remove('col-drag-over');
+          if (th.classList.contains('resizing')) return;
+          const fromStr = ev.dataTransfer.getData('col-drag'); if (!fromStr) return;
+          const from = parseInt(fromStr); const to = ci; if (from === to || isNaN(from)) return;
+          /* Reordenar colunas e dados de cada linha */
+          const [movedCol] = tabela.colunas.splice(from, 1); tabela.colunas.splice(to, 0, movedCol);
+          tabela.linhas.forEach(r => { const [movedCell] = r.splice(from, 1); r.splice(to, 0, movedCell); });
+          /* Ajustar sort col index */
+          if (tabela.sort && tabela.sort.col !== null) {
+            if (tabela.sort.col === from) tabela.sort.col = to;
+            else if (from < to && tabela.sort.col > from && tabela.sort.col <= to) tabela.sort.col--;
+            else if (from > to && tabela.sort.col >= to && tabela.sort.col < from) tabela.sort.col++;
+          }
+          salvar(); renderTblHead(table, tabela, aba); renderTblBody(table, tabela);
+        });
+        th.addEventListener('contextmenu', ev => {
+          ev.preventDefault();
+          openCtx(ev.clientX, ev.clientY, [
+            { label: 'Configurar coluna (Validação)', fn: () => abrirModalConfigurarColuna(aba.id, tabela.id, ci) },
+            { type: 'sep' },
+            { label: 'Excluir coluna', danger: true, fn: () => excluirColuna(ci) }
+          ]);
+        });
+        // Column label is read-only — rename via context menu only
+        inner.appendChild(lbl); inner.appendChild(si); th.appendChild(inner);
+
+        let curW = tabela.colWidths && tabela.colWidths[ci] ? tabela.colWidths[ci] : 110;
+        th.style.width = curW + 'px';
+        th.style.minWidth = curW + 'px';
+        const resizer = document.createElement('div'); resizer.className = 'resizer';
+        resizer.addEventListener('mousedown', e => {
+          e.preventDefault(); e.stopPropagation();
+          th.removeAttribute('draggable');
+          const startX = e.clientX;
+          const startW = th.getBoundingClientRect().width;
+          resizer.classList.add('resizing');
+          function doDrag(ev) {
+            let newW = Math.max(50, startW + ev.clientX - startX);
+            th.style.width = newW + 'px';
+            th.style.minWidth = newW + 'px';
+          }
+          function stopDrag() {
+            document.removeEventListener('mousemove', doDrag); document.removeEventListener('mouseup', stopDrag);
+            resizer.classList.remove('resizing');
+            th.setAttribute('draggable', 'true');
+            const finalW = th.getBoundingClientRect().width;
+            if (tabela._selAll) {
+              tabela.colunas.forEach((_, cidx) => tabela.colWidths[cidx] = finalW);
+            } else {
+              tabela.colWidths[ci] = finalW;
+            }
+            salvar();
+            if (tabela._selAll) renderTblHead(table, tabela, aba);
+          }
+          document.addEventListener('mousemove', doDrag); document.addEventListener('mouseup', stopDrag);
+        });
+        th.appendChild(resizer);
+
+        hrow.appendChild(th);
+      });
+      /* add-col-th movido para thead-actions */
+      thead.appendChild(hrow);
+    }
+
+    /* ── SPREADSHEET SELECTION STATE ── */
+    const selState = {
+      tabelaId: null,
+      anchor: null,
+      head: null,
+      mouseDown: false,
+      rowSelecting: false,
+      colSelecting: false,
+      copiedData: null,
+      copiedFormats: null,
+      isCut: false,
+      cutSourceId: null,
+      cutRange: null,
+      // Fill-handle drag state
+      filling: false,       // true while dragging the fill handle
+      fillAnchor: null,     // {ri,ci} start of fill (anchor cell)
+      fillHead: null,       // {ri,ci} current fill end
+    };
+
+    // Global mouseup always clears mouseDown
+    document.addEventListener('mouseup', () => { selState.mouseDown = false; selState.rowSelecting = false; selState.colSelecting = false; /* filling is handled by the fill mouseup listener above */ });
+    function selRange() {
+      if (!selState.anchor || !selState.head) return null;
+      return {
+        r1: Math.min(selState.anchor.ri, selState.head.ri),
+        r2: Math.max(selState.anchor.ri, selState.head.ri),
+        c1: Math.min(selState.anchor.ci, selState.head.ci),
+        c2: Math.max(selState.anchor.ci, selState.head.ci),
+      };
+    }
+    function inRange(ri, ci) {
+      const r = selRange(); if (!r) return false;
+      return ri >= r.r1 && ri <= r.r2 && ci >= r.c1 && ci <= r.c2;
+    }
+    function isAnchor(ri, ci) { return selState.anchor && selState.anchor.ri === ri && selState.anchor.ci === ci; }
+
+    function applySelectionStyles(table, tabela) {
+      const trs = Array.from(table.querySelectorAll('tbody tr'));
+      // Compute fill-preview range
+      let fillRange = null;
+      if (selState.filling && selState.fillAnchor && selState.fillHead) {
+        const fa = selState.fillAnchor; const fh = selState.fillHead;
+        fillRange = {
+          r1: Math.min(fa.ri, fh.ri), r2: Math.max(fa.ri, fh.ri),
+          c1: Math.min(fa.ci, fh.ci), c2: Math.max(fa.ci, fh.ci),
+        };
+      }
+      const r = selRange();
+      // Highlight selected column headers
+      const ths = Array.from(table.querySelectorAll('thead th:not(.row-num-th)'));
+      ths.forEach((th, ci) => {
+        const colSelected = r && ci >= r.c1 && ci <= r.c2 && r.r1 === 0 && r.r2 >= tabela.linhas.length - 1;
+        th.classList.toggle('col-selected', !!colSelected);
+      });
+      trs.forEach(tr => {
+        const ri = parseInt(tr.dataset.ri);
+        const tds = Array.from(tr.querySelectorAll('td:not(.row-num)'));
+        tds.forEach((td, ci) => {
+          const anchor = isAnchor(ri, ci);
+          td.classList.toggle('cell-selected', inRange(ri, ci) && !anchor);
+          td.classList.toggle('cell-anchor', anchor);
+          // Fill preview (exclude the anchor itself from preview)
+          const inFill = fillRange && ri >= fillRange.r1 && ri <= fillRange.r2 && ci >= fillRange.c1 && ci <= fillRange.c2 && !anchor;
+          td.classList.toggle('fill-preview', !!inFill);
+          // Add fill-handle to anchor cell
+          td.querySelectorAll('.fill-handle').forEach(h => h.remove());
+          if (anchor) {
+            const fh = document.createElement('div'); fh.className = 'fill-handle';
+            fh.addEventListener('mousedown', ev => {
+              ev.preventDefault(); ev.stopPropagation();
+              selState.filling = true;
+              selState.fillAnchor = { ri, ci };
+              selState.fillHead = { ri, ci };
+            });
+            td.appendChild(fh);
+          }
+        });
+        const rowSelected = r && ri >= r.r1 && ri <= r.r2 && r.c1 === 0 && r.c2 >= tabela.colunas.length - 1;
+        tr.classList.toggle('row-selected', rowSelected);
+      });
+    }
+
+    // Fill-handle mousemove + mouseup (global)
+    document.addEventListener('mousemove', ev => {
+      if (!selState.filling) return;
+      // Find which TD the mouse is over
+      const el2 = document.elementFromPoint(ev.clientX, ev.clientY);
+      if (!el2) return;
+      const td = el2.closest('td[data-ri][data-ci]');
+      if (!td) return;
+      const ri = parseInt(td.dataset.ri); const ci = parseInt(td.dataset.ci);
+      if (isNaN(ri) || isNaN(ci)) return;
+      if (selState.fillHead && selState.fillHead.ri === ri && selState.fillHead.ci === ci) return;
+      selState.fillHead = { ri, ci };
+      // Find the active table to refresh styles
+      const tbl = td.closest('table'); if (!tbl) return;
+      const tblId = selState.tabelaId;
+      const aba = getAbaAtiva(); if (!aba) return;
+      const tabela2 = aba.tabelas ? aba.tabelas.find(t => t.id === tblId) : null; if (!tabela2) return;
+      applySelectionStyles(tbl, tabela2);
+    });
+    document.addEventListener('mouseup', ev => {
+      if (!selState.filling) return;
+      selState.filling = false;
+      const fa = selState.fillAnchor; const fh = selState.fillHead;
+      if (!fa || !fh) { selState.fillAnchor = null; selState.fillHead = null; return; }
+      // Execute fill: copy anchor cell data+format to all cells in fill range
+      const aba = getAbaAtiva(); if (!aba) return;
+      const tblId = selState.tabelaId;
+      const tabela2 = aba.tabelas ? aba.tabelas.find(t => t.id === tblId) : null; if (!tabela2) return;
+      const r1=Math.min(fa.ri,fh.ri), r2=Math.max(fa.ri,fh.ri);
+      const c1=Math.min(fa.ci,fh.ci), c2=Math.max(fa.ci,fh.ci);
+      const srcVal = tabela2.linhas[fa.ri] ? (tabela2.linhas[fa.ri][fa.ci] || '') : '';
+      // Only cell-specific format (not column-wide) — so paste is purely what the source cell has
+      const srcFmt = (tabela2.cellConfig && tabela2.cellConfig[fa.ri] && tabela2.cellConfig[fa.ri][fa.ci]) || null;
+      snapshot();
+      if (!tabela2.cellConfig) tabela2.cellConfig = {};
+      for (let ri=r1; ri<=r2; ri++) {
+        while (tabela2.linhas.length <= ri) tabela2.linhas.push(tabela2.colunas.map(()=>''));
+        for (let ci=c1; ci<=c2; ci++) {
+          if (ri === fa.ri && ci === fa.ci) continue; // skip the anchor cell itself
+          // Overwrite value unconditionally
+          tabela2.linhas[ri][ci] = srcVal;
+          // Overwrite cellConfig: apply source format or clear any existing validation
+          if (!tabela2.cellConfig[ri]) tabela2.cellConfig[ri] = {};
+          if (srcFmt) {
+            tabela2.cellConfig[ri][ci] = JSON.parse(JSON.stringify(srcFmt));
+          } else {
+            delete tabela2.cellConfig[ri][ci];
+          }
+        }
+      }
+      selState.fillAnchor = null; selState.fillHead = null;
+      salvar();
+      // Re-render
+      const tbl = document.querySelector('.tbl'); if (!tbl) return;
+      renderTblHead(tbl, tabela2, aba); renderTblBody(tbl, tabela2);
+      showToast('Preenchido!');
+    });
+
+    function clearSelection(table, tabela) {
+      selState.anchor = null; selState.head = null;
+      applySelectionStyles(table, tabela);
+    }
+
+    function deleteSelection(table, tabela) {
+      const r = selRange(); if (!r) return;
+      if (!tabela.cellConfig) tabela.cellConfig = {};
+      for (let ri = r.r1; ri <= r.r2; ri++) {
+        if (!tabela.linhas[ri]) continue;
+        for (let ci = r.c1; ci <= r.c2; ci++) {
+          tabela.linhas[ri][ci] = '';
+          // Also clear per-cell validation so the cell is completely free
+          if (tabela.cellConfig[ri]) delete tabela.cellConfig[ri][ci];
+        }
+      }
+      salvar();
+      renderTblBody(table, tabela);
+      showToast('Conteúdo apagado');
+    }
+
+    function getSelectedText(table, tabela) {
+      const r = selRange(); if (!r) return '';
+      const lines = [];
+      for (let ri = r.r1; ri <= r.r2; ri++) {
+        const cells = [];
+        for (let ci = r.c1; ci <= r.c2; ci++) {
+          cells.push(tabela.linhas[ri] ? (tabela.linhas[ri][ci] || '') : '');
+        }
+        lines.push(cells.join('\t'));
+      }
+      return lines.join('\n');
+    }
+
+    function copySelection(table, tabela) {
+      const r = selRange(); if (!r) return;
+      const data = [];
+      const formats = [];
+      for (let ri = r.r1; ri <= r.r2; ri++) {
+        const row = []; const frow = [];
+        for (let ci = r.c1; ci <= r.c2; ci++) {
+          row.push(tabela.linhas[ri] ? (tabela.linhas[ri][ci] || '') : '');
+          // Copy cell-specific config first, then column config as fallback
+          const cellFmt = (tabela.cellConfig && tabela.cellConfig[ri] && tabela.cellConfig[ri][ci])
+                       || (tabela.colConfig && tabela.colConfig[ci]);
+          frow.push(cellFmt ? JSON.parse(JSON.stringify(cellFmt)) : null);
+        }
+        data.push(row); formats.push(frow);
+      }
+      selState.copiedData = data;
+      selState.copiedFormats = formats;
+      const text = getSelectedText(table, tabela);
+      navigator.clipboard.writeText(text).catch(() => {});
+      showToast('Copiado (' + (r.r2-r.r1+1) + 'x' + (r.c2-r.c1+1) + ')');
+    }
+
+    function cutSelection(table, tabela) {
+      const r = selRange(); if (!r) return;
+      copySelection(table, tabela);
+      selState.isCut = true;
+      selState.cutSourceId = tabela.id;
+      selState.cutRange = { ...r };
+      // Visual: dashed border on cut cells
+      table.querySelectorAll('tbody td:not(.row-num)').forEach(td => {
+        const ri = parseInt(td.dataset.ri), ci = parseInt(td.dataset.ci);
+        td.classList.toggle('cell-cut', inRange(ri, ci));
+      });
+      showToast('✂ Recortado — Ctrl+V para colar');
+    }
+
+    function clearCut(table) {
+      selState.isCut = false; selState.cutRange = null; selState.cutSourceId = null;
+      if (table) table.querySelectorAll('.cell-cut').forEach(td => td.classList.remove('cell-cut'));
+    }
+
+    function pasteToSelection(table, tabela, rows2d, keepFormats) {
+      const anchor = selState.anchor; if (!anchor) return;
+      const ri0 = anchor.ri; const ci0 = anchor.ci;
+      if (!tabela.cellConfig) tabela.cellConfig = {};
+      rows2d.forEach((row, dr) => {
+        const ri = ri0 + dr;
+        while (tabela.linhas.length <= ri) tabela.linhas.push(tabela.colunas.map(() => ''));
+        row.forEach((val, dc) => {
+          const ci = ci0 + dc;
+          if (ci >= tabela.colunas.length) return;
+          // Always overwrite value
+          tabela.linhas[ri][ci] = val;
+          // Clear any existing cell validation so pasted value is not blocked
+          if (!tabela.cellConfig[ri]) tabela.cellConfig[ri] = {};
+          delete tabela.cellConfig[ri][ci];
+        });
+      });
+      // Then apply source formats if pasting from internal copy (overrides the delete above)
+      if (keepFormats && selState.copiedFormats) {
+        selState.copiedFormats.forEach((frow, dr) => {
+          const destRi = ri0 + dr;
+          if (!tabela.cellConfig[destRi]) tabela.cellConfig[destRi] = {};
+          frow.forEach((fmt, dc) => {
+            const destCi = ci0 + dc;
+            if (destCi >= tabela.colunas.length) return;
+            if (fmt) tabela.cellConfig[destRi][destCi] = JSON.parse(JSON.stringify(fmt));
+            else delete tabela.cellConfig[destRi][destCi];
+          });
+        });
+      }
+      // If this was a cut: blank the original cells and clear their cellConfig
+      if (keepFormats && selState.isCut && selState.cutSourceId === tabela.id && selState.cutRange) {
+        const cr = selState.cutRange;
+        for (let ri = cr.r1; ri <= cr.r2; ri++) {
+          if (!tabela.linhas[ri]) continue;
+          for (let ci = cr.c1; ci <= cr.c2; ci++) {
+            tabela.linhas[ri][ci] = '';
+            if (tabela.cellConfig && tabela.cellConfig[ri]) delete tabela.cellConfig[ri][ci];
+          }
+        }
+        clearCut(table);
+      }
+      snapshot();
+      salvar();
+      renderTblHead(table, tabela, getAbaAtiva());
+      renderTblBody(table, tabela);
+      showToast('✓ Colado!');
+    }
+
+
+    /* ── CELL STYLE HELPERS ── */
+    const FONT_COLORS = ['default','#ffffff','#e2e8f0','#94a3b8','#475569','#1e293b','#000000','#fca5a5','#f87171','#ef4444','#dc2626','#991b1b','#fed7aa','#fb923c','#f97316','#ea580c','#c2410c','#fef08a','#facc15','#eab308','#ca8a04','#a16207','#bbf7d0','#4ade80','#22c55e','#16a34a','#15803d','#166534','#99f6e4','#2dd4bf','#14b8a6','#0d9488','#0f766e','#7dd3fc','#38bdf8','#0ea5e9','#0284c7','#0369a1','#bfdbfe','#93c5fd','#60a5fa','#3b82f6','#2563eb','#1d4ed8','#ddd6fe','#c4b5fd','#a78bfa','#8b5cf6','#7c3aed','#f9a8d4','#f472b6','#ec4899','#db2777','#be185d'];
+    const FONT_COLOR_LABELS = { default:'Padrão','#ffffff':'Branco','#e2e8f0':'Cinza muito claro','#94a3b8':'Cinza','#475569':'Cinza escuro','#1e293b':'Azul escuro','#000000':'Preto','#fca5a5':'Vermelho muito claro','#f87171':'Vermelho claro','#ef4444':'Vermelho','#dc2626':'Vermelho vivo','#991b1b':'Vermelho escuro','#fed7aa':'Laranja muito claro','#fb923c':'Laranja claro','#f97316':'Laranja','#ea580c':'Laranja escuro','#c2410c':'Laranja muito escuro','#fef08a':'Amarelo claro','#facc15':'Amarelo','#eab308':'Amarelo dourado','#ca8a04':'Mostarda','#a16207':'Ocre','#bbf7d0':'Verde muito claro','#4ade80':'Verde claro','#22c55e':'Verde','#16a34a':'Verde vivo','#15803d':'Verde escuro','#166534':'Verde muito escuro','#99f6e4':'Teal muito claro','#2dd4bf':'Teal claro','#14b8a6':'Teal','#0d9488':'Teal escuro','#0f766e':'Teal muito escuro','#7dd3fc':'Azul muito claro','#38bdf8':'Azul claro','#0ea5e9':'Azul céu','#0284c7':'Azul','#0369a1':'Azul escuro','#bfdbfe':'Índigo muito claro','#93c5fd':'Índigo claro','#60a5fa':'Índigo','#3b82f6':'Azul vivo','#2563eb':'Azul forte','#1d4ed8':'Azul profundo','#ddd6fe':'Violeta muito claro','#c4b5fd':'Violeta claro','#a78bfa':'Violeta','#8b5cf6':'Roxo','#7c3aed':'Roxo escuro','#f9a8d4':'Rosa muito claro','#f472b6':'Rosa claro','#ec4899':'Rosa','#db2777':'Rosa escuro','#be185d':'Rosa muito escuro' };
+
+    function getCellStyle(tabela, ri, ci) {
+      return (tabela.cellStyle && tabela.cellStyle[ri] && tabela.cellStyle[ri][ci]) || {};
+    }
+
+    function applyCellStyleTD(td, style) {
+      const textAlign = style.align || 'left';
+      const fw = style.bold ? '700' : '';
+      const fc = style.color || '';
+      // Apply to TD container
+      td.style.textAlign = textAlign;
+      td.style.fontWeight = fw;
+      td.style.color = fc;
+      // Apply to any input/select inside so it overrides browser defaults
+      td.querySelectorAll('input, select').forEach(el => {
+        el.style.textAlign = textAlign;
+        el.style.fontWeight = fw;
+        el.style.color = fc;
+      });
+      // Apply to badge spans (dropdown badges)
+      td.querySelectorAll('.dropdown-badge').forEach(el => {
+        el.style.fontWeight = fw;
+      });
+    }
+
+    function renderTblBody(table, tabela) {
+      let tbody = table.querySelector('tbody'); if (tbody) tbody.remove();
+      tbody = document.createElement('tbody');
+      const rows = getFilteredRows(tabela);
+      const ROW_BG = { default: null, blue: 'rgba(37,99,235,.18)', green: 'rgba(22,163,74,.18)', yellow: 'rgba(217,119,6,.18)', red: 'rgba(220,38,38,.18)', purple: 'rgba(147,51,234,.18)', orange: 'rgba(234,88,12,.18)', pink: 'rgba(219,39,119,.18)', teal: 'rgba(13,148,136,.18)' };
+      const BADGE_BG = { default: '#4a5568', blue: '#2563eb', green: '#16a34a', yellow: '#d97706', red: '#dc2626', purple: '#9333ea', orange: '#ea580c', pink: '#db2777', teal: '#0d9488' };
+
+      if (selState.tabelaId !== tabela.id) {
+        selState.anchor = null; selState.head = null;
+        selState.tabelaId = tabela.id;
+      }
+
+      // ── ROW DRAG-MOVE state ──
+      let draggedRowIndex = null;
+
+      function doRowDrop(from, to) {
+        if (from === to || from === null) return;
+        const [movedRow] = tabela.linhas.splice(from, 1); tabela.linhas.splice(to, 0, movedRow);
+        tabela.linhasFixas = tabela.linhasFixas.map(x => { if (x===from) return to; if (from<to&&x>from&&x<=to) return x-1; if (from>to&&x>=to&&x<from) return x+1; return x; });
+        const oldLC = tabela.linhasColoridas; const newLC = {};
+        for (const k of Object.keys(oldLC)) { const ki=parseInt(k); let nki=ki; if (ki===from) nki=to; else if (from<to&&ki>from&&ki<=to) nki=ki-1; else if (from>to&&ki>=to&&ki<from) nki=ki+1; newLC[nki]=oldLC[k]; }
+        tabela.linhasColoridas = newLC;
+        salvar(); renderTblBody(table, tabela);
+      }
+
+      function attachRowDrop(tr, originalIndex) {
+        tr.addEventListener('dragover', ev => { if (draggedRowIndex!==null&&draggedRowIndex!==originalIndex) { ev.preventDefault(); ev.stopPropagation(); tr.style.borderTop='2px solid var(--accent)'; } });
+        tr.addEventListener('dragleave', () => { tr.style.borderTop=''; });
+        tr.addEventListener('drop', ev => { tr.style.borderTop=''; if (draggedRowIndex===null||draggedRowIndex===originalIndex) return; ev.preventDefault(); ev.stopPropagation(); doRowDrop(draggedRowIndex, originalIndex); });
+      }
+
+      // ── CELL BUILD ──
+      function buildCellInput(linha, ri, ci) {
+        // Cell-specific config takes priority over column-wide config
+        const colCfg = (tabela.cellConfig && tabela.cellConfig[ri] && tabela.cellConfig[ri][ci])
+                     || (tabela.colConfig && tabela.colConfig[ci]);
+
+        if (colCfg && colCfg.type === 'data') {
+          const inp = document.createElement('input'); inp.type='date'; inp.className='cell-date-input'; inp.value=linha[ci]||'';
+          inp.addEventListener('focus', () => {
+            if (!selState.mouseDown) {
+              if (!selRange() || !inRange(ri,ci)) {
+                selState.anchor={ri,ci}; selState.head={ri,ci}; applySelectionStyles(table,tabela);
+              }
+            }
+          });
+          inp.addEventListener('change', () => { linha[ci]=inp.value; salvar(); });
+          inp.addEventListener('keydown', e => {
+            e.stopPropagation();
+            if (e.key==='Enter') { e.preventDefault(); focusTblCell(table,ri+1,ci); }
+            if (e.key==='Tab') { e.preventDefault(); const nci=ci+1; if (nci<tabela.colunas.length) focusTblCell(table,ri,nci); else focusTblCell(table,ri+1,0); }
+            if (e.key==='Delete'||e.key==='Backspace') { e.preventDefault(); snapshot(); deleteSelection(table,tabela); return; }
+            if ((e.ctrlKey||e.metaKey)&&e.key==='c') { e.preventDefault(); copySelection(table,tabela); }
+            if ((e.ctrlKey||e.metaKey)&&e.key==='x') { e.preventDefault(); snapshot(); cutSelection(table,tabela); }
+            if ((e.ctrlKey||e.metaKey)&&e.key==='v') { e.preventDefault(); navigator.clipboard.readText().then(txt=>{ pasteToSelection(table,tabela,txt.split('\n').map(r=>r.split('\t')),true); }).catch(()=>{}); }
+            if ((e.ctrlKey||e.metaKey)&&!e.shiftKey&&e.key.toLowerCase()==='z') { e.preventDefault(); undo(); }
+            if ((e.ctrlKey||e.metaKey)&&(e.shiftKey&&e.key.toLowerCase()==='z'||e.key.toLowerCase()==='y')) { e.preventDefault(); redo(); }
+          });
+          return inp;
+        }
+
+        if (colCfg && colCfg.type === 'lista') {
+          const opts = colCfg.options||[];
+          const wrapper = document.createElement('div'); wrapper.style.cssText='position:relative;width:100%;';
+          const sel = document.createElement('select'); sel.className='cell-dropdown';
+          const emptyOpt = document.createElement('option'); emptyOpt.value=''; emptyOpt.textContent='—'; sel.appendChild(emptyOpt);
+          opts.forEach(o => { const op=document.createElement('option'); op.value=o.label; op.textContent=o.label; sel.appendChild(op); });
+          sel.value = linha[ci]||'';
+          const badge = document.createElement('span'); badge.className='dropdown-badge';
+          badge.style.cssText='position:absolute;left:6px;top:50%;transform:translateY(-50%);pointer-events:none;display:none;';
+          function updateBadge() {
+            const curOpt=opts.find(o=>o.label===sel.value);
+            if (curOpt&&curOpt.color&&curOpt.color!=='default') { badge.textContent=sel.value; badge.style.background=BADGE_BG[curOpt.color]||'#4a5568'; badge.style.display='inline-block'; sel.style.color='transparent'; }
+            else if (sel.value) { badge.textContent=sel.value; badge.style.background='#4a5568'; badge.style.display='inline-block'; sel.style.color='transparent'; }
+            else { badge.style.display='none'; sel.style.color=''; }
+          }
+          updateBadge();
+          sel.addEventListener('focus', () => { sel.style.color=''; badge.style.display='none'; if (!selState.mouseDown) { if (!selRange() || !inRange(ri,ci)) { selState.anchor={ri,ci}; selState.head={ri,ci}; applySelectionStyles(table,tabela); } } });
+          sel.addEventListener('blur', updateBadge);
+          sel.addEventListener('change', () => { linha[ci]=sel.value; updateBadge(); salvar(); });
+          sel.addEventListener('keydown', e => {
+            e.stopPropagation();
+            if (e.key==='Tab') { e.preventDefault(); const nci=ci+1; if (nci<tabela.colunas.length) focusTblCell(table,ri,nci); else focusTblCell(table,ri+1,0); }
+            if (e.key==='Delete'||e.key==='Backspace') { e.preventDefault(); snapshot(); deleteSelection(table,tabela); return; }
+            if ((e.ctrlKey||e.metaKey)&&e.key==='c') { e.preventDefault(); copySelection(table,tabela); }
+            if ((e.ctrlKey||e.metaKey)&&e.key==='x') { e.preventDefault(); snapshot(); cutSelection(table,tabela); }
+            if ((e.ctrlKey||e.metaKey)&&e.key==='v') { e.preventDefault(); navigator.clipboard.readText().then(txt=>{ pasteToSelection(table,tabela,txt.split('\n').map(r=>r.split('\t')),true); }).catch(()=>{}); }
+            if ((e.ctrlKey||e.metaKey)&&!e.shiftKey&&e.key.toLowerCase()==='z') { e.preventDefault(); undo(); }
+            if ((e.ctrlKey||e.metaKey)&&(e.shiftKey&&e.key.toLowerCase()==='z'||e.key.toLowerCase()==='y')) { e.preventDefault(); redo(); }
+          });
+          wrapper.appendChild(sel); wrapper.appendChild(badge);
+          return wrapper;
+        }
+
+        // Default text input
+        const inp = document.createElement('input'); inp.type='text'; inp.className='cell-input'; inp.value=linha[ci]||''; inp.placeholder='…';
+        inp.addEventListener('focus', () => {
+          if (!selState.mouseDown) {
+            if (!selRange() || !inRange(ri,ci)) {
+              selState.anchor={ri,ci}; selState.head={ri,ci}; applySelectionStyles(table,tabela);
+            }
+          }
+        });
+        inp.addEventListener('keydown', e => {
+          e.stopPropagation();
+          if (e.key==='Enter'&&!e.shiftKey) { e.preventDefault(); if (ri===tabela.linhas.length-1) { tabela.linhas.push(tabela.colunas.map(()=>'')); salvar(); renderTblBody(table,tabela); setTimeout(()=>focusTblCell(table,ri+1,ci),0); } else { focusTblCell(table,ri+1,ci); } }
+          if (e.key==='Tab') { e.preventDefault(); const nci=ci+1; if (nci<tabela.colunas.length) { focusTblCell(table,ri,nci); } else if (ri===tabela.linhas.length-1) { tabela.linhas.push(tabela.colunas.map(()=>'')); salvar(); renderTblBody(table,tabela); setTimeout(()=>focusTblCell(table,ri+1,0),0); } else { focusTblCell(table,ri+1,0); } }
+          if ((e.key==='Delete'||e.key==='Backspace')&&inp.value===''&&selRange()) { e.preventDefault(); snapshot(); deleteSelection(table,tabela); return; }
+          if (e.key==='Escape') { clearSelection(table,tabela); clearCut(table); }
+          if ((e.ctrlKey||e.metaKey)&&e.key==='c') { e.preventDefault(); copySelection(table,tabela); }
+          if ((e.ctrlKey||e.metaKey)&&e.key==='x') { e.preventDefault(); snapshot(); cutSelection(table,tabela); }
+          if ((e.ctrlKey||e.metaKey)&&e.key==='v') { e.preventDefault(); navigator.clipboard.readText().then(txt=>{ pasteToSelection(table,tabela,txt.split('\n').map(r=>r.split('\t')),true); }).catch(()=>{}); }
+          if ((e.ctrlKey||e.metaKey)&&!e.shiftKey&&e.key.toLowerCase()==='z') { e.preventDefault(); undo(); }
+          if ((e.ctrlKey||e.metaKey)&&(e.shiftKey&&e.key.toLowerCase()==='z'||e.key.toLowerCase()==='y')) { e.preventDefault(); redo(); }
+        });
+        inp.addEventListener('input', () => { linha[ci]=inp.value; salvar(); });
+        return inp;
+      }
+
+      // ── ROW BUILD ──
+      function buildRow(linha, ri, isPinned) {
+        const tr = document.createElement('tr'); tr.dataset.ri=ri;
+        if (isPinned) tr.classList.add('row-pinned');
+        attachRowDrop(tr, ri);
+        if (tabela.rowHeights&&tabela.rowHeights[ri]) tr.style.height=tabela.rowHeights[ri]+'px';
+        if (tabela.linhasColoridas&&tabela.linhasColoridas[ri]) { tr.style.background=ROW_BG[tabela.linhasColoridas[ri]]||''; }
+
+        const rnum = document.createElement('td'); rnum.className='row-num';
+
+        // ── Drag-handle strip (left, ⠿ icon) — only this triggers row move ──
+        const rnumDrag = document.createElement('span'); rnumDrag.className='rnum-drag'; rnumDrag.title='Arrastar para mover linha';
+        rnumDrag.innerHTML='&#8942;'; // ⠿ vertical dots
+        rnumDrag.draggable=true;
+        rnumDrag.addEventListener('dragstart', ev => {
+          ev.stopPropagation();
+          if (ev.target.classList.contains('row-resizer')) { ev.preventDefault(); return; }
+          draggedRowIndex=ri; ev.dataTransfer.effectAllowed='move'; tr.style.opacity='.5';
+        });
+        rnumDrag.addEventListener('dragend', () => { tr.style.opacity=''; draggedRowIndex=null; });
+
+        // ── Number zone — click/drag selects rows ──
+        const rnumNum = document.createElement('span'); rnumNum.className='rnum-num';
+        if (isPinned) rnumNum.innerHTML='<i class="bx bx-pin" style="font-size:12px"></i>'; else rnumNum.textContent=ri+1;
+
+        // Mousedown on number zone → start row selection
+        rnumNum.addEventListener('mousedown', e => {
+          if (e.button!==0) return;
+          e.stopPropagation();
+          selState.tabelaId=tabela.id; selState.mouseDown=true; selState.rowSelecting=true;
+          const curR = selRange();
+          const fullRowSelected = curR && curR.r1<=ri && curR.r2>=ri && curR.c1===0 && curR.c2>=tabela.colunas.length-1;
+          if (!fullRowSelected) {
+            selState.anchor={ri, ci:0}; selState.head={ri, ci:tabela.colunas.length-1};
+          }
+          applySelectionStyles(table,tabela);
+          updateFmtBar(table, tabela);
+        });
+
+        // Mousemove on number zone (or drag handle when selecting) → extend selection
+        rnum.addEventListener('mousemove', () => {
+          if (!selState.mouseDown||!selState.rowSelecting) return;
+          selState.head={ri, ci:tabela.colunas.length-1};
+          applySelectionStyles(table,tabela);
+        });
+
+        rnum.appendChild(rnumDrag); rnum.appendChild(rnumNum);
+
+        const rowResizer = document.createElement('div'); rowResizer.className='row-resizer';
+        rowResizer.addEventListener('mousedown', e => {
+          e.preventDefault(); e.stopPropagation(); rnum.removeAttribute('draggable');
+          const startY=e.clientY; const startH=tr.getBoundingClientRect().height; rowResizer.classList.add('resizing');
+          function doDragY(ev) { tr.style.height=Math.max(28,startH+ev.clientY-startY)+'px'; }
+          function stopDragY() { document.removeEventListener('mousemove',doDragY); document.removeEventListener('mouseup',stopDragY); rowResizer.classList.remove('resizing'); rnum.setAttribute('draggable','true'); const finalH=tr.getBoundingClientRect().height; if (!tabela.rowHeights) tabela.rowHeights={}; if (tabela._selAll) tabela.linhas.forEach((_,lidx)=>tabela.rowHeights[lidx]=finalH); else tabela.rowHeights[ri]=finalH; salvar(); if (tabela._selAll) renderTblBody(table,tabela); }
+          document.addEventListener('mousemove',doDragY); document.addEventListener('mouseup',stopDragY);
+        });
+        rnum.appendChild(rowResizer);
+
+        rnum.addEventListener('contextmenu', ev => {
+          ev.preventDefault(); ev.stopPropagation();
+          const curCor=tabela.linhasColoridas[ri]||tabela.linhasColoridas[String(ri)]||'default';
+          const pinnedItems=isPinned ? [{label:'Desafixar linha',fn:()=>{tabela.linhasFixas=tabela.linhasFixas.filter(x=>x!==ri);salvar();renderTblBody(table,tabela);}}] : [{label:'Fixar linha',fn:()=>{if(!tabela.linhasFixas.includes(ri))tabela.linhasFixas.push(ri);salvar();renderTblBody(table,tabela);}}];
+          // Select this row so Ctrl+C/X work on it
+          selState.tabelaId=tabela.id; selState.anchor={ri,ci:0}; selState.head={ri,ci:tabela.colunas.length-1}; applySelectionStyles(table,tabela);
+          openCtx(ev.clientX,ev.clientY,[
+            ...pinnedItems,
+            {label:'Excluir linha',danger:true,fn:()=>{snapshot();if(tabela.linhas.length<=1){tabela.linhas[0]=tabela.colunas.map(()=>'');}else{tabela.linhas.splice(ri,1);tabela.linhasFixas=tabela.linhasFixas.filter(x=>x!==ri).map(x=>x>ri?x-1:x);const newLC={};Object.entries(tabela.linhasColoridas).forEach(([k,v])=>{const ki=parseInt(k);if(ki===ri)return;newLC[ki>ri?ki-1:ki]=v;});tabela.linhasColoridas=newLC;}salvar();renderTblBody(table,tabela);}},
+            {type:'sep'},{type:'lbl',text:'Cor da linha'},
+            {type:'colors',cur:curCor,fn:(c)=>{if(c==='default'){delete tabela.linhasColoridas[ri];delete tabela.linhasColoridas[String(ri)];}else{tabela.linhasColoridas[ri]=c;tabela.linhasColoridas[String(ri)]=c;}salvar();renderTblBody(table,tabela);}}
+          ]);
+        });
+        tr.appendChild(rnum);
+
+        // Data cells
+        tabela.colunas.forEach((_, ci) => {
+          const td = document.createElement('td'); td.dataset.ri=ri; td.dataset.ci=ci;
+
+          // mousedown on TD = start cell-range selection
+          td.addEventListener('mousedown', e => {
+            if (e.button!==0) return;
+            // Format painter: apply style and start drag-paint
+            if (_painterActive && _painterStyle) {
+              applyPainter(table, tabela, ri, ci);
+              selState.tabelaId=tabela.id; selState.mouseDown=true; selState.rowSelecting=false;
+              selState.anchor={ri,ci}; selState.head={ri,ci};
+              applySelectionStyles(table,tabela);
+              return;
+            }
+            selState.tabelaId=tabela.id; selState.mouseDown=true; selState.rowSelecting=false;
+            // if clicking inside existing selection, keep it; otherwise start new anchor/head
+            if (!(selRange() && inRange(ri, ci))) {
+              selState.anchor={ri,ci}; selState.head={ri,ci};
+            }
+            applySelectionStyles(table,tabela);
+            updateFmtBar(table, tabela);
+          });
+          // mousemove on TD = extend selection (only when mouse is held)
+          td.addEventListener('mousemove', () => {
+            if (!selState.mouseDown||selState.rowSelecting||selState.filling) return;
+            if (_painterActive && _painterStyle) {
+              applyPainter(table, tabela, ri, ci);
+              selState.head={ri,ci}; applySelectionStyles(table,tabela);
+              return;
+            }
+            if (selState.head&&selState.head.ri===ri&&selState.head.ci===ci) return;
+            selState.head={ri,ci}; applySelectionStyles(table,tabela);
+          });
+
+          // Right-click context menu on cell
+          td.addEventListener('contextmenu', ev => {
+            ev.preventDefault(); ev.stopPropagation();
+            // Ensure this cell is at least selected (if nothing selected, select it)
+            if (!selRange() || !inRange(ri, ci)) {
+              selState.tabelaId=tabela.id; selState.anchor={ri,ci}; selState.head={ri,ci};
+              applySelectionStyles(table,tabela);
+            }
+            const r = selRange();
+            const hasCopied = !!(selState.copiedData);
+            // Cell color state (read from linhasColoridas — we'll store cellColors separately)
+            const curCellCor = (tabela.cellColors && tabela.cellColors[ri] && tabela.cellColors[ri][ci]) || 'default';
+            const CELL_BG = { default:null, blue:'rgba(37,99,235,.28)', green:'rgba(22,163,74,.28)', yellow:'rgba(217,119,6,.28)', red:'rgba(220,38,38,.28)', purple:'rgba(147,51,234,.28)', orange:'rgba(234,88,12,.28)', pink:'rgba(219,39,119,.28)', teal:'rgba(13,148,136,.28)' };
+            const items = [];
+            if (hasCopied) {
+              items.push({ label: 'Colar', fn: () => {
+                navigator.clipboard.readText().then(txt => {
+                  pasteToSelection(table, tabela, txt.split('\n').map(rw=>rw.split('\t')), true);
+                }).catch(() => {
+                  if (selState.copiedData) {
+                    pasteToSelection(table, tabela, selState.copiedData, true);
+                  }
+                });
+              }});
+            }
+            items.push({ label: 'Copiar', fn: () => copySelection(table, tabela) });
+            items.push({ label: 'Recortar', fn: () => { snapshot(); cutSelection(table, tabela); } });
+            items.push({ type: 'sep' });
+            items.push({ type: 'lbl', text: 'Cor das células' });
+            items.push({ type: 'colors', cur: curCellCor, fn: (cor) => {
+              snapshot();
+              if (!tabela.cellColors) tabela.cellColors = {};
+              if (r) {
+                for (let rri=r.r1; rri<=r.r2; rri++) {
+                  if (!tabela.cellColors[rri]) tabela.cellColors[rri] = {};
+                  for (let rci=r.c1; rci<=r.c2; rci++) {
+                    if (cor === 'default') delete tabela.cellColors[rri][rci];
+                    else tabela.cellColors[rri][rci] = cor;
+                  }
+                }
+              }
+              salvar(); renderTblBody(table, tabela);
+            }});
+            openCtx(ev.clientX, ev.clientY, items);
+          });
+
+          const cellEl = buildCellInput(linha, ri, ci);
+          td.appendChild(cellEl);
+          // Apply per-cell background color
+          const CELL_BG2 = { blue:'rgba(37,99,235,.22)', green:'rgba(22,163,74,.22)', yellow:'rgba(217,119,6,.22)', red:'rgba(220,38,38,.22)', purple:'rgba(147,51,234,.22)', orange:'rgba(234,88,12,.22)', pink:'rgba(219,39,119,.22)', teal:'rgba(13,148,136,.22)' };
+          const cellCor = tabela.cellColors && tabela.cellColors[ri] && tabela.cellColors[ri][ci];
+          if (cellCor && cellCor !== 'default' && CELL_BG2[cellCor]) td.style.background = CELL_BG2[cellCor];
+          // Apply per-cell text style
+          const cs = getCellStyle(tabela, ri, ci);
+          if (cs && (cs.align || cs.bold || cs.color)) applyCellStyleTD(td, cs);
+          tr.appendChild(td);
+        });
+
+        return tr;
+      }
+
+      // Render pinned rows first, then normal rows
+      tabela.linhasFixas.forEach(ri => { const linha=tabela.linhas[ri]; if (!linha) return; tbody.appendChild(buildRow(linha,ri,true)); });
+      rows.forEach(({ r: linha, i: ri }) => { if (tabela.linhasFixas.includes(ri)) return; tbody.appendChild(buildRow(linha,ri,false)); });
+      table.appendChild(tbody);
+
+      // Keyboard + paste shortcuts on wrapper
+      const tblWrap = table.closest('.tbl-wrap');
+      if (tblWrap && !tblWrap._kbBound) {
+        tblWrap._kbBound=true; tblWrap.setAttribute('tabindex','-1');
+        tblWrap.addEventListener('keydown', e => {
+          if ((e.ctrlKey||e.metaKey)&&e.key==='c') { e.preventDefault(); copySelection(table,tabela); }
+          if ((e.ctrlKey||e.metaKey)&&e.key==='x') { e.preventDefault(); snapshot(); cutSelection(table,tabela); }
+          if ((e.ctrlKey||e.metaKey)&&e.key==='v') { e.preventDefault(); navigator.clipboard.readText().then(txt=>{ pasteToSelection(table,tabela,txt.split('\n').map(r=>r.split('\t')),true); }).catch(()=>{}); }
+          if ((e.ctrlKey||e.metaKey)&&!e.shiftKey&&e.key.toLowerCase()==='z') { e.preventDefault(); undo(); }
+          if ((e.ctrlKey||e.metaKey)&&(e.shiftKey&&e.key.toLowerCase()==='z'||e.key.toLowerCase()==='y')) { e.preventDefault(); redo(); }
+          if (e.key==='Escape') { clearSelection(table,tabela); clearCut(table); }
+          if (e.key==='Delete'&&selRange()) { e.preventDefault(); snapshot(); deleteSelection(table,tabela); }
+        });
+        tblWrap.addEventListener('paste', e => {
+          e.preventDefault();
+          const txt=(e.clipboardData||window.clipboardData).getData('text');
+          if (!txt||!selState.anchor) return;
+          pasteToSelection(table,tabela,txt.split('\n').map(r=>r.split('\t')),true);
+        });
+      }
+
+      applySelectionStyles(table, tabela);
+    }
+
+    function focusTblCell(table, ri, ci) {
+      const trs = Array.from(table.querySelectorAll('tbody tr'));
+      if (trs[ri]) { const cells = trs[ri].querySelectorAll('.cell-input'); if (cells[ci]) cells[ci].focus(); }
+    }
+
+    function renderTableArea(aba) {
+      const main = el('#main');
+      const existing = main.querySelector('.tables-container');
+      if (existing) existing.remove();
+      const cont = document.createElement('div'); cont.className = 'tables-container';
+
+      if (!aba.tabelas || !aba.tabelas.length) {
+        const empty = document.createElement('div'); empty.className = 'empty-tab'; empty.textContent = 'Nenhuma tabela.'; cont.appendChild(empty);
+        main.appendChild(cont);
+        return;
+      }
+
+      const nav = document.createElement('div'); nav.className = 'tables-nav';
+      aba.tabelas.forEach(tbl => {
+        const btn = document.createElement('button'); btn.className = 'table-nav-btn' + (aba.tabelaAtivaId === tbl.id ? ' active' : '');
+        btn.dataset.color = tbl.cor || 'default';
+        btn.textContent = tbl.nome;
+        btn.onclick = () => { aba.tabelaAtivaId = tbl.id; salvar(); renderTableArea(aba); };
+        btn.addEventListener('contextmenu', ev => {
+          ev.preventDefault(); ev.stopPropagation();
+          const items = [
+            { label: 'Nova tabela', fn: () => criarNovaTabela(aba.id) },
+            { label: 'Renomear', fn: () => abrirModalRenomearTabela(aba.id, tbl.id) },
+            { label: 'Duplicar', fn: () => duplicarTabela(aba.id, tbl.id) },
+            { type: 'sep' },
+            { label: 'Excluir', danger: true, fn: () => excluirTabela(aba.id, tbl.id) },
+            { type: 'sep' }, { type: 'lbl', text: 'Cor da tabela' },
+            { type: 'colors', cur: tbl.cor || 'default', fn: (c) => { tbl.cor = c; salvar(); renderTableArea(aba); } }
+          ];
+          openCtx(ev.clientX, ev.clientY, items);
+        });
+        nav.appendChild(btn);
+      });
+
+      const newBtn = document.createElement('button'); newBtn.className = 'table-nav-btn'; newBtn.textContent = '+'; newBtn.style.fontSize = '16px'; newBtn.style.fontWeight = 'bold'; newBtn.title = 'Nova tabela'; newBtn.onclick = () => criarNovaTabela(aba.id); nav.appendChild(newBtn);
+
+      cont.appendChild(nav);
+
+      const ativaId = aba.tabelaAtivaId || aba.tabelas[0]?.id;
+      const ativa = aba.tabelas.find(t => t.id === ativaId);
+      if (ativa) {
+        const wrap = document.createElement('div'); wrap.style.padding = '.25rem 0';
+        wrap.appendChild(buildTableCard(aba, ativa));
+        cont.appendChild(wrap);
+      }
+
+      main.appendChild(cont);
+    }
+
+    /* RENDER */
+    function render() {
+      renderTabs();
+      /* Substituir #main para limpar event listeners acumulados */
+      const oldMain = el('#main');
+      const newMain = oldMain.cloneNode(false);
+      oldMain.parentNode.replaceChild(newMain, oldMain);
+
+      const aba = getAbaAtiva();
+
+      if (!aba) {
+        const ew = document.createElement('div'); ew.className = 'empty-workspace';
+        ew.innerHTML = '<div class="ew-title">Bem-vindo ao Notas</div><div class="ew-sub">Crie sua primeira aba para começar a organizar notas e tabelas.</div>';
+        newMain.appendChild(ew);
+        newMain.addEventListener('contextmenu', ev => {
+          ev.preventDefault();
+          openCtx(ev.clientX, ev.clientY, [{ label: '+ Nova aba', fn: () => abrirModalNovaAba() }]);
+        });
+        return;
+      }
+      if (aba.tipo === 'notas') {
+        /* wrapper flex para rodapé ficar no bottom */
+        const page = document.createElement('div'); page.className = 'notes-page';
+        const grid = document.createElement('div'); grid.className = 'grid';
+        aba.notas.forEach(n => grid.appendChild(buildNoteCard(aba.id, n)));
+        if (!aba.notas.length) { const em = document.createElement('div'); em.className = 'empty-tab'; em.textContent = 'Nenhuma nota aqui.'; grid.appendChild(em); }
+        page.appendChild(grid);
+        /* rodapé espelhando o header */
+        const footer = document.createElement('div'); footer.className = 'notes-footer';
+        const cnt = document.createElement('span'); cnt.className = 'notes-footer-count';
+        cnt.textContent = aba.notas.length + ' nota' + (aba.notas.length !== 1 ? 's' : '');
+        footer.appendChild(cnt);
+        page.appendChild(footer);
+        newMain.appendChild(page);
+        /* clique direito em toda a área de notas exceto nos cards */
+        newMain.addEventListener('contextmenu', ev => {
+          if (ev.target.closest('.card')) return;
+          ev.preventDefault();
+          openCtx(ev.clientX, ev.clientY, [{ label: '+ Nova nota', fn: () => addNota(aba.id) }]);
+        });
+      } else if (aba.tipo === 'tabela') {
+        renderTableArea(aba);
+        /* clique direito em toda a área de tabela exceto dentro dos cards e nav */
+        newMain.addEventListener('contextmenu', ev => {
+          if (ev.target.closest('.table-card') || ev.target.closest('.tables-nav')) return;
+          ev.preventDefault();
+          openCtx(ev.clientX, ev.clientY, [{ label: '+ Nova tabela', fn: () => criarNovaTabela(aba.id) }]);
+        });
+      }
+      atualizarBadgeLixeira();
+    }
+
+    /* HEADER: clique direito abre apenas + Nova aba (fora de tabs e botões) */
+    el('#header').addEventListener('contextmenu', ev => {
+      if (ev.target.closest('.tab') || ev.target.closest('.iconbtn') || ev.target.closest('label')) return;
+      ev.preventDefault(); ev.stopPropagation();
+      openCtx(ev.clientX, ev.clientY, [{ label: '+ Nova aba', fn: () => abrirModalNovaAba() }]);
+    });
+
+    /* TOOLBAR */
+    el('#btnNewTab').onclick = () => abrirModalNovaAba();
+
+    /* ── LIXEIRA ── */
+    el('#btnLixeira').onclick = () => abrirLixeira();
+    el('#btnConfig').onclick = () => abrirModalConfig();
+
+    /* ── EXCEL IMPORT / EXPORT ── */
+    function abrirModalExcel(abaId, tabelaId) {
+      const body = document.createElement('div');
+
+      // ── Exportar ──
+      const secExp = document.createElement('div'); secExp.style.cssText = 'margin-bottom:.85rem;';
+      const expLbl = document.createElement('div'); expLbl.style.cssText = 'font-size:12px;color:var(--muted);margin-bottom:.5rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;';
+      expLbl.textContent = 'Exportar';
+      const expDesc = document.createElement('p'); expDesc.style.cssText = 'margin:0 0 .6rem;font-size:13px;color:var(--muted);line-height:1.5;';
+      expDesc.textContent = 'Baixe a tabela ativa como arquivo Excel compatível (.xls).';
+      const bExportXLS = document.createElement('button'); bExportXLS.className = 'btn primary'; bExportXLS.textContent = '⬇ Baixar Excel (.xls)';
+      bExportXLS.style.cssText = 'width:100%;';
+      bExportXLS.onclick = () => {
+        const aba2 = abaId ? getAba(abaId) : getAbaAtiva();
+        const tbl2 = tabelaId
+          ? (aba2 && aba2.tabelas && aba2.tabelas.find(t => t.id === tabelaId))
+          : (aba2 && aba2.tabelas && aba2.tabelas.find(t => t.id === aba2.tabelaAtivaId));
+        if (!tbl2) { showToast('Nenhuma tabela ativa'); return; }
+        const hdr = '<tr>' + tbl2.colunas.map((col, ci) => `<th>${col.nome || getColName(ci)}</th>`).join('') + '</tr>';
+        const rows = tbl2.linhas.map(r => '<tr>' + tbl2.colunas.map((_, ci) => `<td>${r[ci] || ''}</td>`).join('') + '</tr>').join('');
+        const xls = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>${tbl2.nome}</x:Name></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table>${hdr}${rows}</table></body></html>`;
+        const blob = new Blob([xls], { type: 'application/vnd.ms-excel;charset=UTF-8' });
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+        a.download = (tbl2.nome || 'tabela') + '.xls'; a.click(); URL.revokeObjectURL(a.href);
+        showToast('Exportado!'); closeModal();
+      };
+      secExp.appendChild(expLbl); secExp.appendChild(expDesc); secExp.appendChild(bExportXLS);
+
+      // ── Separator ──
+      const sep = document.createElement('div'); sep.style.cssText = 'height:1px;background:var(--border);margin:.85rem 0;';
+
+      // ── Importar ──
+      const secImp = document.createElement('div');
+      const impLbl = document.createElement('div'); impLbl.style.cssText = 'font-size:12px;color:var(--muted);margin-bottom:.5rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;';
+      impLbl.textContent = 'Importar';
+      const impDesc = document.createElement('p'); impDesc.style.cssText = 'margin:0 0 .6rem;font-size:13px;color:var(--muted);line-height:1.5;';
+      impDesc.textContent = 'Importe um arquivo .csv ou .tsv. Os dados criarão uma nova tabela na aba ativa.';
+      const impLabel = document.createElement('label'); impLabel.className = 'btn'; impLabel.style.cssText = 'width:100%;display:flex;align-items:center;justify-content:center;gap:.4rem;cursor:pointer;box-sizing:border-box;';
+      impLabel.textContent = '⬆ Escolher arquivo (.csv / .tsv)';
+      const impInput = document.createElement('input'); impInput.type = 'file'; impInput.accept = '.csv,.tsv,.txt'; impInput.style.display = 'none';
+      impInput.addEventListener('change', () => {
+        const file = impInput.files[0]; if (!file) return;
+        const reader = new FileReader();
+        reader.onload = ev => {
+          const text = ev.target.result;
+          const lines = text.split(/\r?\n/).filter(l => l.trim());
+          if (!lines.length) { showToast('Arquivo vazio'); return; }
+          const sep2 = lines[0].includes('\t') ? '\t' : ',';
+          const cols = lines[0].split(sep2).map((h, i) => ({ id: uid(), nome: h.replace(/^"|"$/g,'') || getColName(i) }));
+          const rowData = lines.slice(1).map(l => { const cells = l.split(sep2).map(c => c.replace(/^"|"$/g,'')); while (cells.length < cols.length) cells.push(''); return cells.slice(0, cols.length); });
+          const aba2 = getAbaAtiva();
+          if (!aba2 || aba2.tipo !== 'tabela') { showToast('Selecione uma aba de tabela'); return; }
+          snapshot();
+          const novaTabela = { id: uid(), nome: file.name.replace(/\.[^.]+$/, ''), isDefault: false, colunas: cols, linhas: rowData, cor: 'default', sort: { col: null, dir: 'asc' }, filter: '', linhasColoridas: {}, linhasFixas: [], colWidths: {}, cellConfig: {}, cellColors: {}, cellStyle: {} };
+          aba2.tabelas.push(novaTabela); aba2.tabelaAtivaId = novaTabela.id;
+          salvar(); renderTableArea(aba2); closeModal(); showToast('Importado: ' + rowData.length + ' linha(s)');
+        };
+        reader.readAsText(file);
+      });
+      impLabel.appendChild(impInput);
+      secImp.appendChild(impLbl); secImp.appendChild(impDesc); secImp.appendChild(impLabel);
+
+      body.appendChild(secExp); body.appendChild(sep); body.appendChild(secImp);
+      const bClose = document.createElement('button'); bClose.className = 'btn'; bClose.textContent = 'Fechar'; bClose.onclick = closeModal;
+      openModal('📊 Excel — Importar / Exportar', body, [bClose]);
+    }
+
+    /* ── MODAL DE CONFIGURAÇÕES ── */
+    function abrirModalConfig() {
+      const body = document.createElement('div');
+
+      // ── Tema ──
+      const temaLbl = document.createElement('div'); temaLbl.style.cssText = 'font-size:12px;color:var(--muted);margin-bottom:.5rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;';
+      temaLbl.textContent = 'Tema';
+      const temaRow = document.createElement('div'); temaRow.style.cssText = 'display:flex;gap:.5rem;margin-bottom:.9rem;';
+      ['Escuro', 'Claro'].forEach(nome => {
+        const b = document.createElement('button'); b.className = 'btn'; b.style.cssText = 'flex:1;';
+        b.textContent = nome === 'Escuro' ? 'Escuro' : 'Claro';
+        const isLight = document.documentElement.classList.contains('light');
+        if ((nome === 'Claro' && isLight) || (nome === 'Escuro' && !isLight)) b.classList.add('primary');
+        b.onclick = () => {
+          const wantLight = nome === 'Claro';
+          const cur = document.documentElement.classList.contains('light');
+          if (wantLight !== cur) { toggleTheme(); }
+          temaRow.querySelectorAll('button').forEach(x => x.classList.remove('primary'));
+          b.classList.add('primary');
+        };
+        temaRow.appendChild(b);
+      });
+
+      // ── Separator ──
+      const sep1 = document.createElement('div'); sep1.style.cssText = 'height:1px;background:var(--border);margin:.75rem 0;';
+
+      // ── Exportar backup ──
+      const expLbl = document.createElement('div'); expLbl.style.cssText = 'font-size:12px;color:var(--muted);margin-bottom:.5rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;';
+      expLbl.textContent = 'Backup — Exportar';
+      const expDesc = document.createElement('p'); expDesc.style.cssText = 'margin:0 0 .5rem;font-size:13px;color:var(--muted);line-height:1.5;';
+      expDesc.textContent = 'Salva todas as abas e notas em um arquivo JSON.';
+      const bExp = document.createElement('button'); bExp.className = 'btn'; bExp.style.cssText = 'width:100%;'; bExp.textContent = '⬇ Exportar dados (.json)';
+      bExp.onclick = async () => {
+        try {
+          const json = JSON.stringify(state, null, 2);
+          if (window.showSaveFilePicker) {
+            const handle = await window.showSaveFilePicker({ suggestedName: 'notas-export.json', types: [{ description: 'JSON File', accept: { 'application/json': ['.json'] } }] });
+            const writable = await handle.createWritable(); await writable.write(json); await writable.close();
+            showToast('Exportado e salvo'); closeModal();
+          } else {
+            const blob = new Blob([json], { type: 'application/json' });
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'notas-export.json'; a.click(); URL.revokeObjectURL(a.href);
+            showToast('Exportado'); closeModal();
+          }
+        } catch (e) { if (e.name !== 'AbortError') alert('Falha: ' + e.message); }
+      };
+
+      // ── Separator ──
+      const sep2 = document.createElement('div'); sep2.style.cssText = 'height:1px;background:var(--border);margin:.75rem 0;';
+
+      // ── Importar backup ──
+      const impLbl = document.createElement('div'); impLbl.style.cssText = 'font-size:12px;color:var(--muted);margin-bottom:.5rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;';
+      impLbl.textContent = 'Backup — Importar';
+      const impDesc = document.createElement('p'); impDesc.style.cssText = 'margin:0 0 .5rem;font-size:13px;color:var(--muted);line-height:1.5;';
+      impDesc.textContent = 'Restaura um backup JSON. Isso substituirá os dados atuais.';
+      const impLabel = document.createElement('label'); impLabel.className = 'btn'; impLabel.style.cssText = 'width:100%;display:flex;align-items:center;justify-content:center;cursor:pointer;box-sizing:border-box;';
+      impLabel.textContent = '⬆ Importar dados (.json)';
+      const impInput = document.createElement('input'); impInput.type = 'file'; impInput.accept = 'application/json'; impInput.style.display = 'none';
+      impInput.onchange = e => {
+        const reader = new FileReader();
+        reader.onload = ev => { try { const d = JSON.parse(ev.target.result); if (d && Array.isArray(d.abas)) { state = d; if (!state.config) state.config = {}; if (!state.abaAtiva && state.abas.length) state.abaAtiva = state.abas[0].id; render(); salvar(); closeModal(); showToast('Importado com sucesso'); } else throw new Error('Formato inválido'); } catch (err) { alert('Falha: ' + err.message); } };
+        if (e.target.files[0]) reader.readAsText(e.target.files[0]); e.target.value = '';
+      };
+      impLabel.appendChild(impInput);
+
+      body.appendChild(temaLbl); body.appendChild(temaRow);
+      body.appendChild(sep1);
+      body.appendChild(expLbl); body.appendChild(expDesc); body.appendChild(bExp);
+      body.appendChild(sep2);
+      body.appendChild(impLbl); body.appendChild(impDesc); body.appendChild(impLabel);
+
+      const bClose = document.createElement('button'); bClose.className = 'btn'; bClose.textContent = 'Fechar'; bClose.onclick = closeModal;
+      openModal('⚙ Configurações', body, [bClose]);
+    }
+
+    function atualizarBadgeLixeira() {
+      const badge = el('#trashBadge'); if (!badge) return;
+      const n = (state.lixeira||[]).length;
+      badge.textContent = n > 99 ? '99+' : String(n);
+      badge.style.display = n > 0 ? 'flex' : 'none';
+    }
+
+    function abrirLixeira() {
+      const body = document.createElement('div');
+      const lx = state.lixeira || [];
+      if (!lx.length) {
+        const em = document.createElement('p');
+        em.style.cssText = 'text-align:center;color:var(--muted);padding:2rem 0;margin:0;';
+        em.textContent = '🗑 A lixeira está vazia.';
+        body.appendChild(em);
+      } else {
+        const list = document.createElement('div');
+        list.style.cssText = 'display:flex;flex-direction:column;gap:.4rem;max-height:380px;overflow-y:auto;padding-right:2px;';
+        lx.forEach((n, idx) => {
+          const row = document.createElement('div');
+          row.style.cssText = 'display:flex;align-items:center;gap:.5rem;padding:.55rem .65rem;border:1px solid var(--border);border-radius:8px;background:var(--surface-2);';
+          const info = document.createElement('div'); info.style.flex = '1'; info.style.minWidth = '0';
+          const title = document.createElement('strong');
+          title.style.cssText = 'font-size:13px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+          title.textContent = n.titulo || '(Sem título)';
+          const sub = document.createElement('div');
+          sub.style.cssText = 'font-size:11px;color:var(--muted);margin-top:2px;';
+          sub.textContent = new Date(n._deletedAt).toLocaleString('pt-BR');
+          info.appendChild(title); info.appendChild(sub);
+          const bRestore = document.createElement('button'); bRestore.className = 'btn';
+          bRestore.style.cssText = 'font-size:12px;padding:0 .65rem;height:28px;flex-shrink:0;white-space:nowrap;';
+          bRestore.textContent = '↩ Restaurar';
+          bRestore.onclick = () => {
+            snapshot();
+            const nota = { id: n.id, titulo: n.titulo, descricao: n.descricao, cor: n.cor };
+            const aba = getAba(n._abaId);
+            if (aba && aba.tipo === 'notas') {
+              aba.notas.unshift(nota);
+            } else {
+              const fallback = state.abas.find(a => a.tipo === 'notas');
+              if (!fallback) { showToast('Nenhuma aba de notas disponível'); return; }
+              fallback.notas.unshift(nota);
+            }
+            state.lixeira.splice(idx, 1);
+            render(); salvar(); closeModal(); atualizarBadgeLixeira();
+            showToast('✓ Nota restaurada!');
+          };
+          const bPerm = document.createElement('button'); bPerm.className = 'btn';
+          bPerm.style.cssText = 'font-size:12px;padding:0 .65rem;height:28px;flex-shrink:0;background:rgba(239,68,68,.15);color:#ef4444;border-color:rgba(239,68,68,.3);white-space:nowrap;';
+          bPerm.textContent = '✕';  bPerm.title = 'Excluir permanentemente';
+          bPerm.onclick = () => {
+            if (!confirm('Excluir esta nota permanentemente? Isso não pode ser desfeito.')) return;
+            state.lixeira.splice(idx, 1); salvar(); closeModal(); abrirLixeira(); atualizarBadgeLixeira();
+          };
+          row.appendChild(info); row.appendChild(bRestore); row.appendChild(bPerm);
+          list.appendChild(row);
+        });
+        body.appendChild(list);
+        const bEmpty = document.createElement('button'); bEmpty.className = 'btn';
+        bEmpty.style.cssText = 'margin-top:.75rem;background:rgba(239,68,68,.12);color:#ef4444;border-color:rgba(239,68,68,.3);width:100%;';
+        bEmpty.textContent = '🗑 Esvaziar Lixeira';
+        bEmpty.onclick = () => {
+          if (!confirm('Excluir TODAS as notas da lixeira permanentemente?')) return;
+          state.lixeira = []; salvar(); closeModal(); atualizarBadgeLixeira(); showToast('Lixeira esvaziada');
+        };
+        body.appendChild(bEmpty);
+      }
+      const btnClose = document.createElement('button'); btnClose.className = 'btn'; btnClose.textContent = 'Fechar'; btnClose.onclick = closeModal;
+      openModal('🗑 Lixeira de Notas (' + lx.length + ')', body, [btnClose]);
+    }
+
+    /* ── GLOBAL Ctrl+Z / Ctrl+Y (outside of text inputs, let native undo work inside them) ── */
+    document.addEventListener('keydown', e => {
+      const tag = document.activeElement ? document.activeElement.tagName : '';
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      if ((e.ctrlKey||e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); }
+      if ((e.ctrlKey||e.metaKey) && (e.shiftKey && e.key.toLowerCase() === 'z' || e.key.toLowerCase() === 'y')) { e.preventDefault(); redo(); }
+    });
+    render();
+  </script>
+</body>
+
+</html>
