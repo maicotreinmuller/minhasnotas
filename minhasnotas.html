@@ -235,7 +235,7 @@
       background: #f2f5f9;
       color: #6b7280;
     }
-    .table-card.tbl-light .tbl td input.cell-input,
+    .table-card.tbl-light .tbl td .cell-display,
     .table-card.tbl-light .tbl td select.cell-dropdown,
     .table-card.tbl-light .tbl td input.cell-date-input {
       color: #111827;
@@ -832,8 +832,11 @@
 
     /* th-edit removed — columns are not editable */
 
-    .tbl td input.cell-input {
+    /* ── CELL DISPLAY (Excel-style: select mode + edit mode) ── */
+    .tbl td .cell-display {
       width: 100%;
+      min-height: 28px;
+      box-sizing: border-box;
       background: transparent;
       border: none;
       outline: none;
@@ -841,10 +844,38 @@
       font-size: 13px;
       padding: .38rem .55rem;
       display: block;
+      white-space: pre-wrap;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+      cursor: default;
+      user-select: none;
+      caret-color: transparent;
+      line-height: 1.45;
     }
 
-    .tbl td input.cell-input:focus {
+    /* Selected mode: blue tint, no cursor */
+    .tbl td.cell-selected .cell-display {
+      background: rgba(45, 127, 249, .13);
+      caret-color: transparent;
+      user-select: none;
+    }
+
+    /* Edit mode: cursor visible, text selectable */
+    .tbl td .cell-display.editing {
       background: rgba(45, 127, 249, .07);
+      caret-color: var(--text);
+      user-select: text;
+      cursor: text;
+      outline: 2px solid var(--accent);
+      outline-offset: -2px;
+    }
+
+    /* Placeholder */
+    .tbl td .cell-display:empty:not(.editing)::before {
+      content: attr(data-placeholder);
+      color: var(--muted);
+      opacity: .45;
+      pointer-events: none;
     }
 
     .add-row-th {
@@ -956,6 +987,7 @@
       outline-offset: -1px;
     }
     .tbl td.cell-anchor {
+      background: rgba(45, 127, 249, 0.07);
       outline: 2px solid var(--accent) !important;
       outline-offset: -2px;
     }
@@ -2132,6 +2164,7 @@
 
     /* ── FORMAT PAINTER — module-level so renderTblBody can reference it ── */
     let _painterActive = false;
+    const _fmtBarRegistry = {}; // tabela.id → updateFmtBar(table, tabela)
     let _painterStyle = null;
     let _painterTabela = null; // which tabela the painter belongs to
     function applyPainter(table, tabela, ri, ci) {
@@ -2330,6 +2363,7 @@
         bAlignR.classList.toggle('active', s.align === 'right');
         bBold.classList.toggle('active', !!s.bold);
       }
+      _fmtBarRegistry[tabela.id] = updateFmtBar;
 
       /* ── A-Z Sort toggle button ── */
       const bSortAZ = document.createElement('button'); bSortAZ.className = 'iconbtn'; bSortAZ.title = 'Ordenar A→Z / Z→A';
@@ -3151,8 +3185,8 @@
       td.style.textAlign = textAlign;
       td.style.fontWeight = fw;
       td.style.color = fc;
-      // Apply to any input/select inside so it overrides browser defaults
-      td.querySelectorAll('input, select').forEach(el => {
+      // Apply to any input/select/cell-display inside so it overrides browser defaults
+      td.querySelectorAll('input, select, .cell-display').forEach(el => {
         el.style.textAlign = textAlign;
         el.style.fontWeight = fw;
         el.style.color = fc;
@@ -3257,29 +3291,199 @@
           return wrapper;
         }
 
-        // Default text input
-        const inp = document.createElement('input'); inp.type='text'; inp.className='cell-input'; inp.value=linha[ci]||''; inp.placeholder='…';
-        inp.addEventListener('focus', () => {
-          if (!selState.mouseDown) {
-            if (!selRange() || !inRange(ri,ci)) {
-              selState.anchor={ri,ci}; selState.head={ri,ci}; applySelectionStyles(table,tabela);
+        // ── Default: Excel-style contenteditable cell ──
+        const div = document.createElement('div');
+        div.className = 'cell-display';
+        div.contentEditable = 'false';   // starts non-editable
+        div.dataset.placeholder = '…';
+        div.textContent = linha[ci] || '';
+
+        // Track mode per-cell
+        let _editMode = false;
+
+        function enterEditMode(placeAtEnd) {
+          if (_editMode) return;
+          _editMode = true;
+          div.contentEditable = 'true';
+          div.classList.add('editing');
+          div.focus();
+          // Position caret
+          const range = document.createRange();
+          const sel = window.getSelection();
+          if (placeAtEnd) {
+            range.selectNodeContents(div);
+            range.collapse(false);
+          } else {
+            range.selectNodeContents(div);
+            range.collapse(true);
+          }
+          sel.removeAllRanges();
+          sel.addRange(range);
+        }
+
+        function exitEditMode(save) {
+          if (!_editMode) return;
+          _editMode = false;
+          div.contentEditable = 'false';
+          div.classList.remove('editing');
+          if (save) {
+            const newVal = div.textContent;
+            if (newVal !== (linha[ci] || '')) {
+              snapshot();
+              linha[ci] = newVal;
+              salvar();
+            }
+          } else {
+            // revert
+            div.textContent = linha[ci] || '';
+          }
+        }
+
+        // ── Single click: select cell (Excel select mode) ──
+        div.addEventListener('mousedown', e => {
+          if (_editMode) {
+            // in edit mode, allow native text selection — don't interfere
+            e.stopPropagation();
+            return;
+          }
+          // Let TD mousedown run for range selection, but also focus this cell
+          e.stopPropagation();
+          selState.tabelaId = tabela.id; selState.mouseDown = true; selState.rowSelecting = false;
+          if (!(selRange() && inRange(ri, ci))) {
+            selState.anchor = { ri, ci }; selState.head = { ri, ci };
+          }
+          applySelectionStyles(table, tabela);
+          (_fmtBarRegistry[tabela.id] || (() => {}))(table, tabela);
+          div.focus();
+        });
+
+        // ── Double click: enter edit mode ──
+        div.addEventListener('dblclick', e => {
+          e.preventDefault(); e.stopPropagation();
+          enterEditMode(true);
+        });
+
+        // ── Focus: mark cell as selected (select mode) ──
+        div.addEventListener('focus', () => {
+          if (!_editMode) {
+            selState.tabelaId = tabela.id;
+            if (!selRange() || !inRange(ri, ci)) {
+              selState.anchor = { ri, ci }; selState.head = { ri, ci };
+              applySelectionStyles(table, tabela);
             }
           }
         });
-        inp.addEventListener('keydown', e => {
-          e.stopPropagation();
-          if (e.key==='Enter'&&!e.shiftKey) { e.preventDefault(); if (ri===tabela.linhas.length-1) { tabela.linhas.push(tabela.colunas.map(()=>'')); salvar(); renderTblBody(table,tabela); setTimeout(()=>focusTblCell(table,ri+1,ci),0); } else { focusTblCell(table,ri+1,ci); } }
-          if (e.key==='Tab') { e.preventDefault(); const nci=ci+1; if (nci<tabela.colunas.length) { focusTblCell(table,ri,nci); } else if (ri===tabela.linhas.length-1) { tabela.linhas.push(tabela.colunas.map(()=>'')); salvar(); renderTblBody(table,tabela); setTimeout(()=>focusTblCell(table,ri+1,0),0); } else { focusTblCell(table,ri+1,0); } }
-          if ((e.key==='Delete'||e.key==='Backspace')&&inp.value===''&&selRange()) { e.preventDefault(); snapshot(); deleteSelection(table,tabela); return; }
-          if (e.key==='Escape') { clearSelection(table,tabela); clearCut(table); }
-          if ((e.ctrlKey||e.metaKey)&&e.key==='c') { e.preventDefault(); copySelection(table,tabela); }
-          if ((e.ctrlKey||e.metaKey)&&e.key==='x') { e.preventDefault(); snapshot(); cutSelection(table,tabela); }
-          if ((e.ctrlKey||e.metaKey)&&e.key==='v') { e.preventDefault(); navigator.clipboard.readText().then(txt=>{ pasteToSelection(table,tabela,txt.split('\n').map(r=>r.split('\t')),true); }).catch(()=>{}); }
-          if ((e.ctrlKey||e.metaKey)&&!e.shiftKey&&e.key.toLowerCase()==='z') { e.preventDefault(); undo(); }
-          if ((e.ctrlKey||e.metaKey)&&(e.shiftKey&&e.key.toLowerCase()==='z'||e.key.toLowerCase()==='y')) { e.preventDefault(); redo(); }
+
+        // ── Blur: save and exit edit mode ──
+        div.addEventListener('blur', e => {
+          if (_editMode) {
+            // Check if focus moved to another element inside same cell (shouldn't happen) 
+            exitEditMode(true);
+          }
         });
-        inp.addEventListener('input', () => { linha[ci]=inp.value; salvar(); });
-        return inp;
+
+        // ── Keyboard handling ──
+        div.addEventListener('keydown', e => {
+          e.stopPropagation();
+
+          if (_editMode) {
+            // ── EDIT MODE keys ──
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              exitEditMode(true);
+              // Move to next row
+              if (ri === tabela.linhas.length - 1) {
+                tabela.linhas.push(tabela.colunas.map(() => ''));
+                salvar(); renderTblBody(table, tabela);
+                setTimeout(() => focusTblCell(table, ri + 1, ci), 0);
+              } else {
+                focusTblCell(table, ri + 1, ci);
+              }
+              return;
+            }
+            if (e.key === 'Escape') {
+              e.preventDefault();
+              exitEditMode(false);
+              div.focus();
+              return;
+            }
+            if (e.key === 'Tab') {
+              e.preventDefault();
+              exitEditMode(true);
+              const nci = ci + 1;
+              if (nci < tabela.colunas.length) { focusTblCell(table, ri, nci); }
+              else if (ri === tabela.linhas.length - 1) {
+                tabela.linhas.push(tabela.colunas.map(() => ''));
+                salvar(); renderTblBody(table, tabela);
+                setTimeout(() => focusTblCell(table, ri + 1, 0), 0);
+              } else { focusTblCell(table, ri + 1, 0); }
+              return;
+            }
+            // Ctrl+Z / Ctrl+Y — let browser handle inside edit mode for text undo
+            if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'z') return;
+            if ((e.ctrlKey || e.metaKey) && (e.shiftKey && e.key.toLowerCase() === 'z' || e.key.toLowerCase() === 'y')) return;
+            // Ctrl+C / Ctrl+X / Ctrl+V — native inside edit mode
+            return;
+          }
+
+          // ── SELECT MODE keys ──
+          if (e.key === 'F2' || e.key === 'Enter') {
+            e.preventDefault();
+            enterEditMode(true);
+            return;
+          }
+          if (e.key === 'Tab') {
+            e.preventDefault();
+            const nci = ci + 1;
+            if (nci < tabela.colunas.length) { focusTblCell(table, ri, nci); }
+            else if (ri === tabela.linhas.length - 1) {
+              tabela.linhas.push(tabela.colunas.map(() => ''));
+              salvar(); renderTblBody(table, tabela);
+              setTimeout(() => focusTblCell(table, ri + 1, 0), 0);
+            } else { focusTblCell(table, ri + 1, 0); }
+            return;
+          }
+          if ((e.key === 'Delete' || e.key === 'Backspace') && selRange()) {
+            e.preventDefault(); snapshot(); deleteSelection(table, tabela); return;
+          }
+          if (e.key === 'Escape') { clearSelection(table, tabela); clearCut(table); return; }
+          if ((e.ctrlKey || e.metaKey) && e.key === 'c') { e.preventDefault(); copySelection(table, tabela); return; }
+          if ((e.ctrlKey || e.metaKey) && e.key === 'x') { e.preventDefault(); snapshot(); cutSelection(table, tabela); return; }
+          if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
+            e.preventDefault();
+            navigator.clipboard.readText().then(txt => {
+              pasteToSelection(table, tabela, txt.split('\n').map(r => r.split('\t')), true);
+            }).catch(() => {});
+            return;
+          }
+          if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); return; }
+          if ((e.ctrlKey || e.metaKey) && (e.shiftKey && e.key.toLowerCase() === 'z' || e.key.toLowerCase() === 'y')) { e.preventDefault(); redo(); return; }
+
+          // Any printable key in select mode → replace content and enter edit mode
+          if (!e.ctrlKey && !e.metaKey && !e.altKey && e.key.length === 1) {
+            e.preventDefault();
+            snapshot();
+            linha[ci] = e.key;
+            div.textContent = e.key;
+            salvar();
+            enterEditMode(false);
+            // Place caret at end of the single char
+            const range = document.createRange();
+            const sel2 = window.getSelection();
+            range.selectNodeContents(div);
+            range.collapse(false);
+            sel2.removeAllRanges();
+            sel2.addRange(range);
+          }
+        });
+
+        // Sync textContent → data on every input event (edit mode)
+        div.addEventListener('input', () => {
+          linha[ci] = div.textContent;
+          salvar();
+        });
+
+        return div;
       }
 
       // ── ROW BUILD ──
@@ -3318,7 +3522,7 @@
             selState.anchor={ri, ci:0}; selState.head={ri, ci:tabela.colunas.length-1};
           }
           applySelectionStyles(table,tabela);
-          updateFmtBar(table, tabela);
+          (_fmtBarRegistry[tabela.id] || (() => {}))(table, tabela);
         });
 
         // Mousemove on number zone (or drag handle when selecting) → extend selection
@@ -3376,7 +3580,7 @@
               selState.anchor={ri,ci}; selState.head={ri,ci};
             }
             applySelectionStyles(table,tabela);
-            updateFmtBar(table, tabela);
+            (_fmtBarRegistry[tabela.id] || (() => {}))(table, tabela);
           });
           // mousemove on TD = extend selection (only when mouse is held)
           td.addEventListener('mousemove', () => {
@@ -3482,7 +3686,16 @@
 
     function focusTblCell(table, ri, ci) {
       const trs = Array.from(table.querySelectorAll('tbody tr'));
-      if (trs[ri]) { const cells = trs[ri].querySelectorAll('.cell-input'); if (cells[ci]) cells[ci].focus(); }
+      const targetTr = trs.find(tr => parseInt(tr.dataset.ri) === ri) || trs[ri];
+      if (!targetTr) return;
+      const cells = targetTr.querySelectorAll('td:not(.row-num)');
+      const td = cells[ci];
+      if (!td) return;
+      // Prefer cell-display (text cell), else cell-date-input
+      const display = td.querySelector('.cell-display');
+      if (display) { display.focus(); return; }
+      const dateInp = td.querySelector('.cell-date-input');
+      if (dateInp) { dateInp.focus(); return; }
     }
 
     function renderTableArea(aba) {
